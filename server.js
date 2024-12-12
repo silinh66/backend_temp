@@ -527,7 +527,7 @@ app.post("/topics/:topic_id/comments", authenticateToken, async (req, res) => {
 // API to get comments for a topic
 app.get("/topics/:topic_id/comments", async (req, res) => {
   const topic_id = parseInt(req.params.topic_id);
-  
+
   const commentsSql = `
     SELECT 
       comments_topic.*, 
@@ -570,15 +570,15 @@ app.get("/topics/:topic_id/comments", async (req, res) => {
       acc[liker.comment_id].push({
         userId: liker.userId,
         name: liker.name,
-        avatar: liker.avatar
+        avatar: liker.avatar,
       });
       return acc;
     }, {});
 
     // Attach likers to comments
-    const enrichedComments = comments.map(comment => ({
+    const enrichedComments = comments.map((comment) => ({
       ...comment,
-      liked_by: likersMap[comment.comment_id] || []
+      liked_by: likersMap[comment.comment_id] || [],
     }));
 
     res.json({ success: true, comments: enrichedComments });
@@ -589,7 +589,6 @@ app.get("/topics/:topic_id/comments", async (req, res) => {
       .send({ error: "An error occurred while fetching comments" });
   }
 });
-
 
 // API to get likes for a topic
 app.get("/topics/:topic_id/likes", async (req, res) => {
@@ -3452,26 +3451,246 @@ app.post("/signals/add", authenticateToken, async (req, res) => {
   }
 });
 
+//API LIST CHI TIEU
+// API lấy danh sách listChiTieu của một người dùng
+app.get("/listChiTieu", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    // Truy vấn lấy tín hiệu của người dùng và thông tin OwnerId
+    const userSignals = await query(
+      "SELECT s.*, u.name, u.image, u.userID, u.isOnline FROM listchitieu s JOIN users u ON s.OwnerID = u.userID WHERE s.OwnerID = ?",
+      [userId]
+    );
+
+    // Truy vấn lấy tín hiệu được chia sẻ với người dùng và thông tin OwnerId
+    const sharedSignals = await query(
+      "SELECT s.*, u.name, u.image, u.userID, u.isOnline FROM shared_listChiTieu ss JOIN listchitieu s ON ss.SignalID = s.SignalID JOIN users u ON s.OwnerID = u.userID WHERE ss.ReceiverID = ? AND ss.Status = 'ACCEPTED'",
+      [userId]
+    );
+
+    // Kết hợp kết quả và loại bỏ trùng lặp
+    const signalMap = new Map();
+    [...userSignals, ...sharedSignals].forEach((signal) => {
+      signalMap.set(signal.SignalID, signal);
+    });
+
+    // Chuyển Map thành mảng để gửi về client
+    const uniqueSignals = Array.from(signalMap.values());
+
+    res.send({ success: true, signals: uniqueSignals });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Internal Server Error" });
+  }
+});
+
+// API xóa listChiTieu
+app.delete(
+  "/listChiTieu/delete/:SignalID",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const userId = req.user.userId;
+      const { SignalID } = req.params;
+
+      // Xóa các bản ghi chia sẻ tín hiệu
+      await query("DELETE FROM shared_listChiTieu WHERE SignalID = ?", [
+        SignalID,
+      ]);
+
+      // Xóa tín hiệu của người dùng
+      await query(
+        "DELETE FROM listchitieu WHERE SignalID = ? AND OwnerID = ?",
+        [SignalID, userId]
+      );
+
+      res.send({ success: true, message: "Signal deleted successfully" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: "Internal Server Error" });
+    }
+  }
+);
+
+// API chia sẻ listChiTieu
+app.post("/listChiTieu/share", authenticateToken, async (req, res) => {
+  try {
+    const { SignalID, receiverIDs } = req.body; // Sử dụng mảng receiverIDs
+    const SenderID = req.user.userId;
+
+    // Lấy thông tin tín hiệu
+    const signal = await query(
+      "SELECT * FROM listchitieu WHERE SignalID = ? AND OwnerID = ?",
+      [SignalID, SenderID]
+    );
+
+    if (signal.length === 0) {
+      return res.status(404).send({ error: true, message: "Signal not found" });
+    }
+
+    // Vòng lặp qua mỗi ReceiverID và chèn vào cơ sở dữ liệu
+    for (const ReceiverID of receiverIDs) {
+      await query(
+        "INSERT INTO shared_listChiTieu (SignalID, SenderID, ReceiverID) VALUES (?, ?, ?)",
+        [SignalID, SenderID, ReceiverID]
+      );
+
+      const senderInfo = await query("SELECT * FROM users WHERE userID = ?", [
+        SenderID,
+      ]);
+
+      const receiverSocketId = userSocketMap[ReceiverID];
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("newChart", [signal[0], senderInfo[0]]);
+      }
+    }
+
+    res.send({
+      success: true,
+      message: "Signal shared successfully with multiple users",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Internal Server Error" });
+  }
+});
+
+// API lấy danh sách yêu cầu chia sẻ listChiTieu để phê duyệt hoặc từ chối
+app.get(
+  "/listChiTieu/list-share-request",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const userId = req.user.userId;
+      const sharedSignals = await query(
+        "SELECT shared_listChiTieu.*, users.name, users.image, users.userID, users.isOnline, listchitieu.* " +
+          "FROM shared_listChiTieu " +
+          "JOIN users ON shared_listChiTieu.SenderID = users.userID " +
+          "JOIN listchitieu ON shared_listChiTieu.SignalID = listchitieu.SignalID " +
+          "WHERE shared_listChiTieu.ReceiverID = ? AND shared_listChiTieu.Status = 'PENDING'",
+        [userId]
+      );
+      res.send({ success: true, sharedSignals });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: "Internal Server Error" });
+    }
+  }
+);
+
+// API xác nhận hoặc từ chối yêu cầu chia sẻ listChiTieu
+app.post("/listChiTieu/respond", authenticateToken, async (req, res) => {
+  try {
+    const { SharedID, Status } = req.body; // Status có thể là 'ACCEPTED' hoặc 'REJECTED'
+    const ReceiverID = req.user.userId;
+
+    // Kiểm tra Status hợp lệ
+    if (!["ACCEPTED", "REJECTED"].includes(Status)) {
+      return res
+        .status(400)
+        .send({ error: true, message: "Invalid status value" });
+    }
+
+    const result = await query(
+      "UPDATE shared_listChiTieu SET Status = ?, RespondedAt = NOW() WHERE SharedID = ? AND ReceiverID = ?",
+      [Status, SharedID, ReceiverID]
+    );
+
+    if (result.affectedRows === 0) {
+      return res
+        .status(404)
+        .send({ error: true, message: "Shared request not found" });
+    }
+
+    res.send({ success: true, message: "Response recorded successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Internal Server Error" });
+  }
+});
+
+// API lấy danh sách listChiTieu đã chia sẻ của một listChiTieu
+app.get("/listChiTieu/shared", authenticateToken, async (req, res) => {
+  try {
+    const SignalID = req.query.SignalID;
+
+    if (!SignalID) {
+      return res
+        .status(400)
+        .send({ error: true, message: "SignalID is required" });
+    }
+
+    const sharedSignals = await query(
+      "SELECT shared_listChiTieu.*, users.name, users.image, users.userID, users.isOnline " +
+        "FROM shared_listChiTieu " +
+        "JOIN users ON shared_listChiTieu.ReceiverID = users.userID " +
+        "WHERE shared_listChiTieu.SignalID = ?",
+      [SignalID]
+    );
+
+    res.send({ success: true, sharedSignals });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Internal Server Error" });
+  }
+});
+
+// API thêm mới listChiTieu
+app.post("/listChiTieu/add", authenticateToken, async (req, res) => {
+  try {
+    // Giả sử các trường dữ liệu tín hiệu được gửi qua body của request
+    const { signalInfo, ownerId, symbol, signalName } = req.body;
+    let signalInfoStringify = JSON.stringify(signalInfo);
+
+    // Kiểm tra dữ liệu đầu vào
+    if (!signalInfo || !ownerId) {
+      return res
+        .status(400)
+        .send({ error: true, message: "Missing required fields" });
+    }
+
+    let creationDate = new Date().toISOString().slice(0, 19).replace("T", " ");
+
+    // Thêm tín hiệu vào cơ sở dữ liệu
+    await query(
+      "INSERT INTO listchitieu (OwnerID, SignalInfo, CreatedAt, symbol, SignalName) VALUES (?, ?, ?, ?, ?)",
+      [ownerId, signalInfoStringify, creationDate, symbol, signalName]
+    );
+
+    res.send({ success: true, message: "Signal added successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Internal Server Error" });
+  }
+});
+
 // API để lấy tất cả cài đặt và điều kiện cho một người dùng
 app.get("/user/settings", authenticateToken, async (req, res) => {
   const userId = req.user.userId; // Lấy userId từ token đã xác thực
   try {
     // Lấy tất cả cài đặt của người dùng
-    const settings = await query(
-      "SELECT settingID, name FROM settings WHERE userID = ?",
+    // const settings = await query(
+    //   "SELECT settingID, name FROM settings WHERE userID = ?",
+    //   [userId]
+    // );
+
+    // // Lặp qua mỗi cài đặt để lấy điều kiện tương ứng
+    // for (let setting of settings) {
+    //   const conditions = await query(
+    //     "SELECT name, value FROM setting_conditions WHERE settingID = ?",
+    //     [setting.settingID]
+    //   );
+    //   setting.conditions = conditions; // Thêm danh sách điều kiện vào mỗi cài đặt
+    // }
+    //get all bo_loc_ky_thuat table
+    const boLocKyThuat = await query(
+      "SELECT * FROM bo_loc_ky_thuat WHERE userID = ?",
       [userId]
     );
+    res.send({ success: true, data: boLocKyThuat });
 
-    // Lặp qua mỗi cài đặt để lấy điều kiện tương ứng
-    for (let setting of settings) {
-      const conditions = await query(
-        "SELECT name, value FROM setting_conditions WHERE settingID = ?",
-        [setting.settingID]
-      );
-      setting.conditions = conditions; // Thêm danh sách điều kiện vào mỗi cài đặt
-    }
-
-    res.send({ success: true, settings: settings });
+    // res.send({ success: true, settings: settings });
   } catch (error) {
     console.error("Failed to fetch settings and conditions:", error);
     res.status(500).send({ error: true, message: "Internal Server Error" });
@@ -3480,10 +3699,11 @@ app.get("/user/settings", authenticateToken, async (req, res) => {
 
 // API để cập nhật QUA_MUA và QUA_BAN
 app.post("/settings/updateConditions", authenticateToken, async (req, res) => {
-  const { settingID, conditions } = req.body;
-  if (!settingID || !conditions || conditions.length === 0) {
-    return res.status(400).send({ error: true, message: "Missing parameters" });
-  }
+  const { listTieuChi } = req.body;
+  const userId = req.user.userId; // Lấy userId từ token đã xác thực
+  // if (!settingID || !conditions || conditions.length === 0) {
+  //   return res.status(400).send({ error: true, message: "Missing parameters" });
+  // }
 
   try {
     for (const condition of conditions) {
