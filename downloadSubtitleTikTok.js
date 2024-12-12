@@ -1,0 +1,243 @@
+const puppeteer = require("puppeteer");
+
+async function downloadSubtitles(urls) {
+  for (const url of urls) {
+    try {
+      const browser = await puppeteer.launch({ headless: false }); // Set headless: false để theo dõi quá trình
+      const page = await browser.newPage();
+      console.log("url: ", url);
+      await page.goto("https://getsubs.cc", { waitUntil: "networkidle2" });
+      await page.type("#getsubbox", url); // Điền URL vào ô input
+      await page.click("#getsubbut"); // Nhấn nút "Get Subs"
+      // Chờ cho đến khi button TXT xuất hiện và có thể nhấn được
+      await page.waitForSelector(
+        'a.btn.btn-warning.volatile.butvie[data-id="butvie"]',
+        { visible: true, timeout: 30000 }
+      );
+
+      // Click trực tiếp vào nút TXT để tải file
+      await page.click('a.btn.btn-warning.volatile.butvie[data-id="butvie"]');
+
+      console.log(`Downloaded subtitles for ${url}`);
+
+      // Tùy theo cấu hình, có thể cần thêm một khoảng đợi để đảm bảo file được tải về hoàn toàn
+      // Đợi 5 giây bằng nodejs
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      console.log(`Downloaded subtitles for ${url}`);
+      // Tạo thời gian đợi ngẫu nhiên từ 10 đến 30 giây
+      const randomDelay = 0;
+      //   const randomDelay = Math.random() * (30000 - 10000) + 10000;
+      console.log(
+        `Waiting for ${Math.round(
+          randomDelay / 1000
+        )} seconds before proceeding...`
+      );
+      await new Promise((resolve) => setTimeout(resolve, randomDelay));
+      await browser.close();
+    } catch (error) {
+      console.log(`Failed to download subtitles for ${url}: ${error.message}`);
+    }
+    // Đóng tab hiện tại
+  }
+}
+
+const urls = [
+  "https://www.tiktok.com/@thaoduocviet68/video/7351614925783026951",
+  "https://www.tiktok.com/@thaoduocviet68/video/7342713470359555335",
+  "https://www.tiktok.com/@thaoduocviet68/video/7349029070836894994",
+  "https://www.tiktok.com/@thaoduocviet68/video/7410335935386193170",
+  "https://www.tiktok.com/@thaoduocviet68/video/7409859954473045255",
+  "https://www.tiktok.com/@thaoduocviet68/video/7409511150058016007",
+  "https://www.tiktok.com/@thaoduocviet68/video/7406628389504830738",
+  "https://www.tiktok.com/@thaoduocviet68/video/7406535950882311442",
+  "https://www.tiktok.com/@thaoduocviet68/video/7406328223186947335",
+  "https://www.tiktok.com/@thaoduocviet68/video/7406211547774651656",
+  "https://www.tiktok.com/@thaoduocviet68/video/7405840403213176071",
+  "https://www.tiktok.com/@thaoduocviet68/video/7379463818818129160",
+  "https://www.tiktok.com/@thaoduocviet68/video/7379165071051705618",
+  "https://www.tiktok.com/@thaoduocviet68/video/7378328764079525138",
+  "https://www.tiktok.com/@thaoduocviet68/video/7376969552107670791",
+  "https://www.tiktok.com/@thaoduocviet68/video/7376461416569539848",
+  "https://www.tiktok.com/@thaoduocviet68/video/7376245863250693383",
+  "https://www.tiktok.com/@thaoduocviet68/video/7376082343762677010",
+  "https://www.tiktok.com/@thaoduocviet68/video/7375725778513743111",
+  "https://www.tiktok.com/@thaoduocviet68/video/7375362276494298375",
+  "https://www.tiktok.com/@thaoduocviet68/video/7375341112837377287",
+  "https://www.tiktok.com/@thaoduocviet68/video/7375154534026366215",
+  "https://www.tiktok.com/@thaoduocviet68/video/7374994437358898440",
+  "https://www.tiktok.com/@thaoduocviet68/video/7374707898301025544",
+  "https://www.tiktok.com/@thaoduocviet68/video/7374625591582100754",
+  "https://www.tiktok.com/@thaoduocviet68/video/7374371992218111239",
+  "https://www.tiktok.com/@thaoduocviet68/video/7374253187550678280",
+  "https://www.tiktok.com/@thaoduocviet68/video/7373867786407382280",
+  "https://www.tiktok.com/@thaoduocviet68/video/7373557030398807304",
+  "https://www.tiktok.com/@thaoduocviet68/video/7373490101298433287",
+  "https://www.tiktok.com/@thaoduocviet68/video/7373224570095947015",
+  "https://www.tiktok.com/@thaoduocviet68/video/7373102654333013255",
+  "https://www.tiktok.com/@thaoduocviet68/video/7372763065869143304",
+  "https://www.tiktok.com/@thaoduocviet68/video/7372486788583132424",
+  "https://www.tiktok.com/@thaoduocviet68/video/7372045279085858055",
+  "https://www.tiktok.com/@thaoduocviet68/video/7370530687042030855",
+  "https://www.tiktok.com/@thaoduocviet68/video/7369048322419608850",
+  "https://www.tiktok.com/@thaoduocviet68/video/7369032404444384530",
+  "https://www.tiktok.com/@thaoduocviet68/video/7368840821967293703",
+  "https://www.tiktok.com/@thaoduocviet68/video/7368806144988417288",
+  "https://www.tiktok.com/@thaoduocviet68/video/7368719595370220807",
+  "https://www.tiktok.com/@thaoduocviet68/photo/7368683960336993544",
+  "https://www.tiktok.com/@thaoduocviet68/video/7368669476499361042",
+  "https://www.tiktok.com/@thaoduocviet68/video/7368288960365284615",
+  "https://www.tiktok.com/@thaoduocviet68/video/7368059801860918546",
+  "https://www.tiktok.com/@thaoduocviet68/video/7368024022241611026",
+  "https://www.tiktok.com/@thaoduocviet68/video/7367963351177055495",
+  "https://www.tiktok.com/@thaoduocviet68/video/7367673405849537800",
+  "https://www.tiktok.com/@thaoduocviet68/video/7367571667352063240",
+  "https://www.tiktok.com/@thaoduocviet68/video/7367554636779179282",
+  "https://www.tiktok.com/@thaoduocviet68/video/7367180301065358610",
+  "https://www.tiktok.com/@thaoduocviet68/video/7366876089366433032",
+  "https://www.tiktok.com/@thaoduocviet68/video/7366814300725382418",
+  "https://www.tiktok.com/@thaoduocviet68/video/7366631815970442504",
+  "https://www.tiktok.com/@thaoduocviet68/video/7366512443062816007",
+  "https://www.tiktok.com/@thaoduocviet68/video/7366127733350485255",
+  "https://www.tiktok.com/@thaoduocviet68/video/7365697999378402568",
+  "https://www.tiktok.com/@thaoduocviet68/video/7365469856092802312",
+  "https://www.tiktok.com/@thaoduocviet68/video/7365331794356391186",
+  "https://www.tiktok.com/@thaoduocviet68/video/7361260702658546962",
+  "https://www.tiktok.com/@thaoduocviet68/video/7360897163385113874",
+  "https://www.tiktok.com/@thaoduocviet68/video/7359763931985906951",
+  "https://www.tiktok.com/@thaoduocviet68/video/7359396229844880658",
+  "https://www.tiktok.com/@thaoduocviet68/video/7359022484810648839",
+  "https://www.tiktok.com/@thaoduocviet68/video/7358441469679504658",
+  "https://www.tiktok.com/@thaoduocviet68/video/7358403742959553810",
+  "https://www.tiktok.com/@thaoduocviet68/video/7358393986387660040",
+  "https://www.tiktok.com/@thaoduocviet68/video/7358378754722352392",
+  "https://www.tiktok.com/@thaoduocviet68/video/7358351734630108434",
+  "https://www.tiktok.com/@thaoduocviet68/video/7358311551557750023",
+  "https://www.tiktok.com/@thaoduocviet68/video/7358299626463612167",
+  "https://www.tiktok.com/@thaoduocviet68/video/7358296118121319688",
+  "https://www.tiktok.com/@thaoduocviet68/video/7358276994104134930",
+  "https://www.tiktok.com/@thaoduocviet68/video/7357992993346833671",
+  "https://www.tiktok.com/@thaoduocviet68/video/7357903171630435591",
+  "https://www.tiktok.com/@thaoduocviet68/video/7357702455263497479",
+  "https://www.tiktok.com/@thaoduocviet68/video/7357624514437500168",
+  "https://www.tiktok.com/@thaoduocviet68/video/7357552505967906055",
+  "https://www.tiktok.com/@thaoduocviet68/video/7357252909425298695",
+  "https://www.tiktok.com/@thaoduocviet68/video/7357177836140121351",
+  "https://www.tiktok.com/@thaoduocviet68/video/7356846864454405383",
+  "https://www.tiktok.com/@thaoduocviet68/video/7356790773918027026",
+  "https://www.tiktok.com/@thaoduocviet68/video/7356570363792461074",
+  "https://www.tiktok.com/@thaoduocviet68/video/7356508169478180104",
+  "https://www.tiktok.com/@thaoduocviet68/video/7356417881644518663",
+  "https://www.tiktok.com/@thaoduocviet68/video/7356157747500420359",
+  "https://www.tiktok.com/@thaoduocviet68/video/7356093389600804103",
+  "https://www.tiktok.com/@thaoduocviet68/video/7356043065166990610",
+  "https://www.tiktok.com/@thaoduocviet68/video/7355798386919886088",
+  "https://www.tiktok.com/@thaoduocviet68/video/7355715499101113607",
+  "https://www.tiktok.com/@thaoduocviet68/photo/7355675610548620562",
+  "https://www.tiktok.com/@thaoduocviet68/video/7355456989746580744",
+  "https://www.tiktok.com/@thaoduocviet68/video/7355404484215950600",
+  "https://www.tiktok.com/@thaoduocviet68/video/7355302296999218439",
+  "https://www.tiktok.com/@thaoduocviet68/video/7355071328359173394",
+  "https://www.tiktok.com/@thaoduocviet68/video/7354959228697693448",
+  "https://www.tiktok.com/@thaoduocviet68/video/7354932571928595730",
+  "https://www.tiktok.com/@thaoduocviet68/video/7354925030737726728",
+  "https://www.tiktok.com/@thaoduocviet68/video/7354667744404475143",
+  "https://www.tiktok.com/@thaoduocviet68/video/7354581152314772743",
+  "https://www.tiktok.com/@thaoduocviet68/video/7354553548086004999",
+  "https://www.tiktok.com/@thaoduocviet68/video/7354368270431964423",
+  "https://www.tiktok.com/@thaoduocviet68/video/7354320142752320786",
+  "https://www.tiktok.com/@thaoduocviet68/video/7354205228700306706",
+  "https://www.tiktok.com/@thaoduocviet68/video/7354186787687828744",
+  "https://www.tiktok.com/@thaoduocviet68/video/7353885774036733191",
+  "https://www.tiktok.com/@thaoduocviet68/video/7353819756933238024",
+  "https://www.tiktok.com/@thaoduocviet68/video/7353597312251284754",
+  "https://www.tiktok.com/@thaoduocviet68/video/7353564932673260808",
+  "https://www.tiktok.com/@thaoduocviet68/video/7353519837085191431",
+  "https://www.tiktok.com/@thaoduocviet68/video/7353471749847010568",
+  "https://www.tiktok.com/@thaoduocviet68/video/7353428937545878791",
+  "https://www.tiktok.com/@thaoduocviet68/video/7353212324833971463",
+  "https://www.tiktok.com/@thaoduocviet68/video/7353100963030355208",
+  "https://www.tiktok.com/@thaoduocviet68/video/7353070702376914184",
+  "https://www.tiktok.com/@thaoduocviet68/video/7352840111492533512",
+  "https://www.tiktok.com/@thaoduocviet68/video/7352729253823204626",
+  "https://www.tiktok.com/@thaoduocviet68/video/7352710265621843207",
+  "https://www.tiktok.com/@thaoduocviet68/video/7352506510817185042",
+  "https://www.tiktok.com/@thaoduocviet68/video/7352337558837267730",
+  "https://www.tiktok.com/@thaoduocviet68/video/7352337143949298951",
+  "https://www.tiktok.com/@thaoduocviet68/video/7352329018097667335",
+  "https://www.tiktok.com/@thaoduocviet68/video/7352136233629256968",
+  "https://www.tiktok.com/@thaoduocviet68/video/7352069961319189778",
+  "https://www.tiktok.com/@thaoduocviet68/video/7351986491142311176",
+  "https://www.tiktok.com/@thaoduocviet68/video/7351960081057058066",
+  "https://www.tiktok.com/@thaoduocviet68/video/7351759250655366408",
+  "https://www.tiktok.com/@thaoduocviet68/video/7351725264344190215",
+  "https://www.tiktok.com/@thaoduocviet68/video/7351588622807698696",
+  "https://www.tiktok.com/@thaoduocviet68/video/7351387386464587015",
+  "https://www.tiktok.com/@thaoduocviet68/video/7351345303418670344",
+  "https://www.tiktok.com/@thaoduocviet68/video/7351247132109638920",
+  "https://www.tiktok.com/@thaoduocviet68/video/7351211286274788616",
+  "https://www.tiktok.com/@thaoduocviet68/video/7351023984403680519",
+  "https://www.tiktok.com/@thaoduocviet68/video/7350979270119886087",
+  "https://www.tiktok.com/@thaoduocviet68/video/7350879973319658759",
+  "https://www.tiktok.com/@thaoduocviet68/video/7350836941794954503",
+  "https://www.tiktok.com/@thaoduocviet68/video/7350607453085601031",
+  "https://www.tiktok.com/@thaoduocviet68/video/7350503974274944263",
+  "https://www.tiktok.com/@thaoduocviet68/video/7350474492042284306",
+  "https://www.tiktok.com/@thaoduocviet68/video/7350262540519099656",
+  "https://www.tiktok.com/@thaoduocviet68/video/7350213470874356999",
+  "https://www.tiktok.com/@thaoduocviet68/video/7350162893649890578",
+  "https://www.tiktok.com/@thaoduocviet68/video/7350103791963753736",
+  "https://www.tiktok.com/@thaoduocviet68/video/7349875789405424914",
+  "https://www.tiktok.com/@thaoduocviet68/video/7349868082816503058",
+  "https://www.tiktok.com/@thaoduocviet68/video/7349788257472875784",
+  "https://www.tiktok.com/@thaoduocviet68/video/7349743292109622535",
+  "https://www.tiktok.com/@thaoduocviet68/video/7349531144682999047",
+  "https://www.tiktok.com/@thaoduocviet68/video/7349457926320409874",
+  "https://www.tiktok.com/@thaoduocviet68/video/7349361724643986706",
+  "https://www.tiktok.com/@thaoduocviet68/video/7349175737502469384",
+  "https://www.tiktok.com/@thaoduocviet68/video/7349125349810179346",
+  "https://www.tiktok.com/@thaoduocviet68/video/7348984487738494226",
+  "https://www.tiktok.com/@thaoduocviet68/video/7348804321821084936",
+  "https://www.tiktok.com/@thaoduocviet68/video/7348755908857564424",
+  "https://www.tiktok.com/@thaoduocviet68/video/7348689397333675272",
+  "https://www.tiktok.com/@thaoduocviet68/video/7348622096509062407",
+  "https://www.tiktok.com/@thaoduocviet68/video/7348402186205826311",
+  "https://www.tiktok.com/@thaoduocviet68/video/7348346279119834375",
+  "https://www.tiktok.com/@thaoduocviet68/video/7348277951437327624",
+  "https://www.tiktok.com/@thaoduocviet68/video/7348246505054162194",
+  "https://www.tiktok.com/@thaoduocviet68/video/7348025055789518088",
+  "https://www.tiktok.com/@thaoduocviet68/video/7347975726701792520",
+  "https://www.tiktok.com/@thaoduocviet68/video/7347892638491708680",
+  "https://www.tiktok.com/@thaoduocviet68/video/7347888646130797842",
+  "https://www.tiktok.com/@thaoduocviet68/video/7347667952453405960",
+  "https://www.tiktok.com/@thaoduocviet68/video/7347609797992271122",
+  "https://www.tiktok.com/@thaoduocviet68/video/7347534779421560071",
+  "https://www.tiktok.com/@thaoduocviet68/video/7347533991659998471",
+  "https://www.tiktok.com/@thaoduocviet68/video/7347522147453046023",
+  "https://www.tiktok.com/@thaoduocviet68/video/7347291947268263175",
+  "https://www.tiktok.com/@thaoduocviet68/video/7346935397986929928",
+  "https://www.tiktok.com/@thaoduocviet68/video/7346924236109303047",
+  "https://www.tiktok.com/@thaoduocviet68/video/7346837697438256391",
+  "https://www.tiktok.com/@thaoduocviet68/video/7346833079694085394",
+  "https://www.tiktok.com/@thaoduocviet68/video/7345687441585556754",
+  "https://www.tiktok.com/@thaoduocviet68/video/7345687122113776914",
+  "https://www.tiktok.com/@thaoduocviet68/video/7345686583418326279",
+  "https://www.tiktok.com/@thaoduocviet68/video/7345463904731974919",
+  "https://www.tiktok.com/@thaoduocviet68/video/7345463383656811783",
+  "https://www.tiktok.com/@thaoduocviet68/video/7345461510602296583",
+  "https://www.tiktok.com/@thaoduocviet68/video/7345302117172677906",
+  "https://www.tiktok.com/@thaoduocviet68/video/7345301772455464200",
+  "https://www.tiktok.com/@thaoduocviet68/video/7345301338638667016",
+  "https://www.tiktok.com/@thaoduocviet68/video/7345092329620901127",
+  "https://www.tiktok.com/@thaoduocviet68/video/7345091738928794887",
+  "https://www.tiktok.com/@thaoduocviet68/video/7345090624204377351",
+  "https://www.tiktok.com/@thaoduocviet68/video/7343108542850764040",
+  "https://www.tiktok.com/@thaoduocviet68/video/7343105647308721415",
+  "https://www.tiktok.com/@thaoduocviet68/video/7342823970187611400",
+  "https://www.tiktok.com/@thaoduocviet68/video/7342820651159309575",
+  "https://www.tiktok.com/@thaoduocviet68/video/7342819866254085384",
+  "https://www.tiktok.com/@thaoduocviet68/video/7342818924012064007",
+  "https://www.tiktok.com/@thaoduocviet68/video/7342714161576692999",
+  "https://www.tiktok.com/@thaoduocviet68/video/7342712199976094984"
+]
+
+downloadSubtitles(urls);
