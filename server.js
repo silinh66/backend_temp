@@ -13,6 +13,9 @@ const cheerio = require("cheerio");
 const { isProduct } = require("./constants/isProduct");
 const fetch = require("node-fetch");
 const path = require("path");
+const twilio = require("twilio");
+
+const randomize = require("randomatic");
 require("dotenv").config();
 
 let { groupDataByTime } = require("./convert");
@@ -857,6 +860,182 @@ app.post("/register-otp", async (req, res) => {
     console.log("error: ", error);
     res.status(500).send({ error: "Internal Server Error" });
   }
+});
+
+app.post("/send-code-sms", async (req, res) => {
+  const { phoneNumber } = req.body;
+  let passcode = randomize("0", 6);
+  const formattedPhoneNumber = phoneNumber.startsWith("+")
+    ? phoneNumber
+    : `+84${phoneNumber.replace(/^0/, "")}`;
+
+  console.log("Formatted phone number: ", formattedPhoneNumber);
+
+  // Gửi SMS qua Twilio
+  const client = twilio(accountSid, authToken);
+
+  client.verify.v2
+    .services("VA3b627f49f233289c812d533f3a644140")
+    .verifications.create({
+      body: `Mã đổi mật khẩu của bạn là: ${passcode}`,
+      from: "DAUTUBENVUNG",
+      to: formattedPhoneNumber,
+      channel: "sms",
+    })
+    .then((message) => {
+      console.log("SMS sent: " + message.sid);
+      res
+        .status(200)
+        .json({ message: "Passcode sent successfully via SMS", passcode });
+    })
+    .catch((error) => {
+      console.log(error);
+      res.status(500).json({ message: "Failed to send passcode via SMS" });
+    });
+});
+
+app.post("/forgot-password", (req, res) => {
+  const { email, phoneNumber } = req.body;
+  let passcode = randomize("0", 6);
+  console.log("passcode: ", passcode);
+
+  if (phoneNumber) {
+    const formattedPhoneNumber = phoneNumber.startsWith("+")
+      ? phoneNumber
+      : `+84${phoneNumber.replace(/^0/, "")}`;
+
+    console.log("Formatted phone number: ", formattedPhoneNumber);
+
+    // Gửi SMS qua Twilio
+    const client = twilio(accountSid, authToken);
+
+    client.verify.v2
+      .services("VA3b627f49f233289c812d533f3a644140")
+      .verifications.create({
+        body: `Mã đổi mật khẩu của bạn là: ${passcode}`,
+        from: "DAUTUBENVUNG",
+        to: formattedPhoneNumber,
+        channel: "sms",
+      })
+      .then((message) => {
+        console.log("SMS sent: " + message.sid);
+        res
+          .status(200)
+          .json({ message: "Passcode sent successfully via SMS", passcode });
+      })
+      .catch((error) => {
+        console.log(error);
+        res.status(500).json({ message: "Failed to send passcode via SMS" });
+      });
+  } else if (email) {
+    // Gửi email
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: emailConfig,
+        pass: passwordConfig,
+      },
+    });
+    const mailOptions = {
+      from: `Đầu Tư Bền Vững ${emailConfig}`,
+      to: email,
+      subject: "Yêu cầu đổi mật khẩu",
+      text: `Mã đổi mật khẩu của bạn là: ${passcode}`,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log(error);
+        res.status(500).json({ message: "Failed to send passcode via email" });
+      } else {
+        console.log("Email sent: " + info.response);
+        res
+          .status(200)
+          .json({ message: "Passcode sent successfully", passcode });
+      }
+    });
+  } else {
+    res.status(400).json({ message: "No contact info provided" });
+  }
+});
+
+app.post("/change-password-contact", async (req, res) => {
+  const { contact, password } = req.body;
+  const password_hash = await bcrypt.hash(password, 10);
+
+  let response;
+  if (validateEmail(contact)) {
+    response = await query("UPDATE users SET password = ? WHERE email = ?", [
+      password_hash,
+      contact,
+    ]);
+  } else if (validatePhoneNumber(contact)) {
+    response = await query(
+      "UPDATE users SET password = ? WHERE phone_number = ?",
+      [password_hash, contact]
+    );
+  } else {
+    return res.status(400).send("Invalid contact information");
+  }
+
+  if (!response) {
+    return res.status(500).send("Failed to update password");
+  }
+  return res.status(200).json({ message: "Đổi pass thành công!" });
+});
+
+function validateEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+function validatePhoneNumber(phoneNumber) {
+  const phoneRegex = /^\+?[0-9]{10,15}$/; // Adjust the regex to match your phone number format
+  return phoneRegex.test(phoneNumber);
+}
+
+app.post("/change-password", async (req, res) => {
+  const { userID, currentPassword, newPassword } = req.body;
+
+  // Ensure all required fields are provided
+  if (!userID || !currentPassword || !newPassword) {
+    return res.status(400).send({
+      error: "UserID, current password, and new password are required.",
+    });
+  }
+
+  // Query the database for user by userID
+  let results = await query("SELECT * FROM users WHERE userID = ?", [userID]);
+
+  if (results.length === 0) {
+    return res.status(401).send({ error: "User not found" });
+  }
+
+  let user = results[0];
+
+  // Verify the current password with bcrypt
+  let isCorrectPassword = await bcrypt.compare(currentPassword, user.password);
+
+  if (!isCorrectPassword) {
+    return res.status(401).send({ error: "Incorrect current password" });
+  }
+
+  // Hash the new password
+  const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+  // Update the password in the database
+  let updateResponse = await query(
+    "UPDATE users SET password = ? WHERE userID = ?",
+    [newPasswordHash, userID]
+  );
+
+  // Check if the update was successful
+  if (!updateResponse.affectedRows) {
+    return res.status(500).send("Failed to update password");
+  }
+
+  // Return success response
+  return res.status(200).json({ message: "Password updated successfully!" });
 });
 
 app.post("/login", async (req, res) => {
