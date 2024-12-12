@@ -70,7 +70,6 @@ var whitelist = [
   "http://192.168.1.221:3003",
   "http://100.102.19.68",
   "http://100.102.19.68:80",
-  
 ];
 var corsOptions = {
   origin: function (origin, callback) {
@@ -358,7 +357,7 @@ app.get("/getFollowedTopics", authenticateToken, async (req, res) => {
   }
 });
 
-app.get("/getTopicsAll", authenticateToken, async (req, res) => {
+app.get("/getTopicsAll", async (req, res) => {
   let symbol = req.params.symbol;
   const topicsSql = `
     SELECT topics.*, users.name as author, users.image as avatar, 
@@ -528,14 +527,61 @@ app.post("/topics/:topic_id/comments", authenticateToken, async (req, res) => {
 // API to get comments for a topic
 app.get("/topics/:topic_id/comments", async (req, res) => {
   const topic_id = parseInt(req.params.topic_id);
-  const sql = `
-    SELECT comments_topic.*, users.name, users.image as avatar
-    FROM comments_topic
-    JOIN users ON comments_topic.userId = users.userId
-    WHERE comments_topic.topic_id = ?`;
+  
+  const commentsSql = `
+    SELECT 
+      comments_topic.*, 
+      users.name, 
+      users.image AS avatar,
+      COUNT(likes_comment.id) AS like_count
+    FROM 
+      comments_topic
+    JOIN 
+      users ON comments_topic.userId = users.userId
+    LEFT JOIN 
+      likes_comment ON comments_topic.comment_id = likes_comment.comment_id
+    WHERE 
+      comments_topic.topic_id = ?
+    GROUP BY 
+      comments_topic.comment_id
+    ORDER BY 
+      comments_topic.created_at DESC;`;
+
+  const likersSql = `
+    SELECT 
+      likes_comment.comment_id,
+      users.userId,
+      users.name,
+      users.image AS avatar
+    FROM 
+      likes_comment
+    JOIN 
+      users ON likes_comment.userId = users.userId
+    WHERE 
+      likes_comment.topic_id = ?;`;
+
   try {
-    let comments = await query(sql, [topic_id]);
-    res.json({ success: true, comments });
+    const comments = await query(commentsSql, [topic_id]);
+    const likers = await query(likersSql, [topic_id]);
+
+    // Map likers to their respective comments
+    const likersMap = likers.reduce((acc, liker) => {
+      if (!acc[liker.comment_id]) acc[liker.comment_id] = [];
+      acc[liker.comment_id].push({
+        userId: liker.userId,
+        name: liker.name,
+        avatar: liker.avatar
+      });
+      return acc;
+    }, {});
+
+    // Attach likers to comments
+    const enrichedComments = comments.map(comment => ({
+      ...comment,
+      liked_by: likersMap[comment.comment_id] || []
+    }));
+
+    res.json({ success: true, comments: enrichedComments });
   } catch (error) {
     console.error(error);
     res
@@ -543,6 +589,7 @@ app.get("/topics/:topic_id/comments", async (req, res) => {
       .send({ error: "An error occurred while fetching comments" });
   }
 });
+
 
 // API to get likes for a topic
 app.get("/topics/:topic_id/likes", async (req, res) => {
@@ -1202,20 +1249,19 @@ app.get("/getUserDetail/:userId", authenticateToken, async (req, res) => {
         [targetUserId, currentUserId]
       );
 
-     if (sentRequest.length > 0) {
-       if (sentRequest[0].status === "requested") {
-         status = "pending"; // Người dùng hiện tại đã gửi lời mời kết bạn
-       } else if (sentRequest[0].status === "accepted") {
-         status = "acceptFriend"; // Hai người đã là bạn (trước đây là "done")
-       }
-     } else if (receivedRequest.length > 0) {
-       if (receivedRequest[0].status === "requested") {
-         status = "pending"; // Người kia đã gửi lời mời kết bạn
-       } else if (receivedRequest[0].status === "accepted") {
-         status = "acceptFriend"; // Hai người đã là bạn (trước đây là "done")
-       }
-     }
-
+      if (sentRequest.length > 0) {
+        if (sentRequest[0].status === "requested") {
+          status = "pending"; // Người dùng hiện tại đã gửi lời mời kết bạn
+        } else if (sentRequest[0].status === "accepted") {
+          status = "acceptFriend"; // Hai người đã là bạn (trước đây là "done")
+        }
+      } else if (receivedRequest.length > 0) {
+        if (receivedRequest[0].status === "requested") {
+          status = "pending"; // Người kia đã gửi lời mời kết bạn
+        } else if (receivedRequest[0].status === "accepted") {
+          status = "acceptFriend"; // Hai người đã là bạn (trước đây là "done")
+        }
+      }
     }
 
     // Add the status to the userInfo
@@ -1594,6 +1640,36 @@ app.post(
     const sql = "INSERT INTO forum_post_comments SET ?";
     await query(sql, comment);
     res.json({ success: true, message: "Comment created" });
+  }
+);
+
+app.post(
+  "/comments/:topic_id/:comment_id/like",
+  authenticateToken,
+  async (req, res) => {
+    const comment_id = parseInt(req.params.comment_id);
+
+    const topic_id = parseInt(req.params.topic_id);
+    const userId = req.user ? req.user.userId : null;
+
+    const sql =
+      "INSERT INTO likes_comment (comment_id, topic_id, userId) VALUES (?, ?, ?)";
+    await query(sql, [comment_id, topic_id, userId]);
+    res.json({ success: true, message: "Comment liked" });
+  }
+);
+
+app.post(
+  "/comments/:topic_id/:comment_id/unlike",
+  authenticateToken,
+  async (req, res) => {
+    const topic_id = parseInt(req.params.topic_id);
+    const comment_id = parseInt(req.params.comment_id);
+    const userId = req.user ? req.user.userId : null;
+
+    const sql = "DELETE FROM likes_comment WHERE comment_id = ? AND userId = ?";
+    await query(sql, [comment_id, userId]);
+    res.json({ success: true, message: "Comment unliked" });
   }
 );
 
