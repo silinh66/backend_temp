@@ -983,28 +983,68 @@ app.put("/update-user", authenticateToken, async (req, res) => {
   }
 });
 
-app.get("/getUserDetail/:userId", async (req, res) => {
-  const userId = req?.params?.userId; // Extracted from the token
+app.get("/getUserDetail/:userId", authenticateToken, async (req, res) => {
+  const targetUserId = req.params.userId; // The user whose details are being fetched
+  const currentUserId = req.user ? req.user.userId : null; // The authenticated user
 
   try {
+    // Fetch user details
     let userResult = await query(
       "SELECT userID, email, phone_number, name, createdOn, image as avatar, isOnline FROM users WHERE userID = ?",
-      [userId]
+      [targetUserId]
     );
+
     if (userResult.length === 0) {
       return res.status(404).send({ error: "User not found" });
     }
 
+    let userInfo = userResult[0];
+
+    // Fetch follower count
     let followersResult = await query(
       "SELECT COUNT(*) as followerCount FROM user_followers WHERE following_id = ?",
-      [userId]
+      [targetUserId]
     );
-
-    let userInfo = userResult[0];
     userInfo.followerCount = followersResult[0].followerCount;
+
+    // Initialize status as 'not' by default
+    let status = "not";
+
+    if (currentUserId) {
+      // Check if there is a friendship record where currentUserId sent a request to targetUserId
+      let sentRequest = await query(
+        "SELECT status FROM friendships WHERE user1_id = ? AND user2_id = ?",
+        [currentUserId, targetUserId]
+      );
+
+      // Check if there is a friendship record where targetUserId sent a request to currentUserId
+      let receivedRequest = await query(
+        "SELECT status FROM friendships WHERE user1_id = ? AND user2_id = ?",
+        [targetUserId, currentUserId]
+      );
+
+     if (sentRequest.length > 0) {
+       if (sentRequest[0].status === "requested") {
+         status = "pending"; // Người dùng hiện tại đã gửi lời mời kết bạn
+       } else if (sentRequest[0].status === "accepted") {
+         status = "acceptFriend"; // Hai người đã là bạn (trước đây là "done")
+       }
+     } else if (receivedRequest.length > 0) {
+       if (receivedRequest[0].status === "requested") {
+         status = "pending"; // Người kia đã gửi lời mời kết bạn
+       } else if (receivedRequest[0].status === "accepted") {
+         status = "acceptFriend"; // Hai người đã là bạn (trước đây là "done")
+       }
+     }
+
+    }
+
+    // Add the status to the userInfo
+    userInfo.status = status;
 
     res.send(userInfo);
   } catch (error) {
+    console.error("Error fetching user details:", error);
     res.status(500).send({ error: "Internal Server Error" });
   }
 });
