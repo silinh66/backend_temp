@@ -4938,7 +4938,6 @@ const getNewsDetail = async (url) => {
       var contentClone = $("div.detail__content").clone(); // Sao chép nội dung để tránh thay đổi DOM gốc
       contentClone.find(".zone--related").remove(); // Loại bỏ phần tử có class 'zone--related'
       content = contentClone.html();
-      console.log("content: ", content);
       type = $("div.detail__category a:last").text().trim();
       sourceUrl = url;
       follow = "Theo Doanh Nhân Việt Nam";
