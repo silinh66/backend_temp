@@ -1,7 +1,7 @@
 const XLSX = require("xlsx");
 const query = require("./common/query");
 
-for (let j = 8; j < 9; j++) {
+for (let j = 11; j < 12; j++) {
   const curMonth = j < 10 ? `0${j}` : j;
   const curYear = 2024;
   const fileExcelName = `${curYear}-${curMonth}.xlsx`;
@@ -136,17 +136,19 @@ for (let j = 8; j < 9; j++) {
     const sheetNamesContainingCPI = workbook.SheetNames.filter((name) => {
       return (
         (name.includes("VDT tu NSNN") ||
-        name.includes("VonDT") ||
+          name.includes("VonDT") ||
           name.includes("VDT") ||
           name.includes("VĐT") ||
           name.includes("VĐT") ||
+          name.includes("VNSNN tháng") ||
           name.includes("VNSNN tháng") ||
           name.includes("VonNSNNthang")) &&
         !name.includes("VĐTTXH") &&
         !name.includes("VDT TTXH") &&
         !name.includes("VDT TTNSNN quy") &&
         !name.includes("VDT TXH") &&
-        !name.includes("VonDTTXH") 
+        !name.includes("VĐT TXH") &&
+        !name.includes("VonDTTXH")
       );
     });
     console.log("sheetNamesContainingCPI: ", sheetNamesContainingCPI);
@@ -179,6 +181,9 @@ for (let j = 8; j < 9; j++) {
 
       //insert new data
       await query("INSERT INTO von_dau_tu  VALUES ?", [dataFinal]);
+
+      //done
+      console.log("Done");
     });
   };
 

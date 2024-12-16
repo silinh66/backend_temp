@@ -1,6 +1,5 @@
 let xlsx = require("xlsx");
 const query = require("./common/query");
-const { async } = require("rxjs/internal/scheduler/async");
 
 let workbook = xlsx.readFile("./data_xlsx/data.xlsx");
 

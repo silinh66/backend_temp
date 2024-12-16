@@ -17,14 +17,12 @@ const query = require("./common/query");
   console.log("dataQuyFilter: ", dataQuyFilter);
   if (!dataQuyFilter) return;
   let dataQuyMap = dataQuyFilter?.map((item) => {
-    return ["TGP", ...Object.values(item)];
+    return [...Object.values(item)];
   });
   console.log("dataQuyMap", dataQuyMap);
   //   insert new data
-  if (dataQuyMap?.length > 0)
-    await query("INSERT INTO can_doi_ke_toan VALUES ?", [dataQuyMap]);
   // if (dataQuyMap?.length > 0)
-  //   await query("INSERT INTO luu_chuyen_tien_te VALUES ?", [
-  //     dataQuyMap,
-  //   ]);
+  //   await query("INSERT INTO can_doi_ke_toan VALUES ?", [dataQuyMap]);
+  if (dataQuyMap?.length > 0)
+    await query("INSERT INTO luu_chuyen_tien_te VALUES ?", [dataQuyMap]);
 })();

@@ -1,5 +1,4 @@
 /** @START_CONFIG */
-const rxjs = require("rxjs");
 const express = require("express");
 const config = require("./config.js");
 const marketStreaming = require("./Streamings/marketStreaming");
