@@ -33,17 +33,13 @@ cron.schedule("*/15 * * * *", () => {
 
 //cronjob every 5 seconds
 cron.schedule("*/5 * * * * *", () => {
-  // getIndexPointHOSE();
-  // getIndexPointHNX();
-  // getNuocNgoai();
-  // // getTuDoanhRong();
-  // getNuocNgoaiMuaRong();
-  // getChangeCount();
-  // getIboard();
-  // getThanhKhoanHistoryHNX();
-  // getThanhKhoanHistoryHOSE();
-  // getThanhKhoanHNX();
-  // getThanhKhoanHOSE();
+  getIndexPointHOSE();
+  getIndexPointHNX();
+  getNuocNgoai();
+  // getTuDoanhRong();
+  getNuocNgoaiMuaRong();
+  getChangeCount();
+  getIboard();
 });
 
 //cronjob every 15 seconds
@@ -3013,7 +3009,7 @@ async function getNewsAll() {
   // await getListPost("https://doanhnhanvn.vn/doanh-nhan/nha-lanh-dao");
   // await getListPost("https://doanhnhanvn.vn/doanh-nhan/cong-dong-doanh-nhan");
   // await getListPost("https://doanhnhanvn.vn/doanh-nhan/kien-thuc-quan-tri");
-  // await getListPost("https://doanhnhanvn.vn/viet-nam/vi-mo");
+  await getListPost("https://doanhnhanvn.vn/viet-nam/vi-mo");
   // await getListPost("https://doanhnhanvn.vn/tai-chinh/tien-te");
   // await getListPost("https://doanhnhanvn.vn/tai-chinh/ngan-hang");
   // await getListPost("https://doanhnhanvn.vn/tai-chinh/dich-vu-tai-chinh");
