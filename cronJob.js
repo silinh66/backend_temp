@@ -123,9 +123,8 @@ function getDateAdjustment(historical) {
     case 1: // Monday
       return today.subtract(3, "days").format("YYYY-MM-DD");
     case 0: // Sunday
-   
       return today.subtract(3, "days").format("YYYY-MM-DD");
-      case 6: // Saturday
+    case 6: // Saturday
       return today.subtract(2, "days").format("YYYY-MM-DD");
     default: // Tuesday, Wednesday, Thursday
       return today.subtract(1, "days").format("YYYY-MM-DD");
@@ -2983,7 +2982,7 @@ async function getNewsAll() {
     //     console.log("listPost.length: ", listPost.length);
     //   });
   };
-  await getListPost("https://doisongphapluat.com.vn/kinh-doanh-17.html");
+  // await getListPost("https://doisongphapluat.com.vn/kinh-doanh-17.html");
 
   // await getListPost("https://www.qdnd.vn/kinh-te/tin-tuc");
   // await getListPost(
@@ -3007,7 +3006,7 @@ async function getNewsAll() {
   await getListPost("https://baochinhphu.vn/kinh-te/thi-truong.htm");
   await getListPost("https://baochinhphu.vn/kinh-te/ngan-hang.htm");
   await getListPost("https://baochinhphu.vn/kinh-te/chung-khoan.htm");
-  // await getListPost("https://doanhnhanvn.vn/the-gioi/kinh-te-quoc-te");
+  await getListPost("https://doanhnhanvn.vn/the-gioi/kinh-te-quoc-te");
   // await getListPost("https://doanhnhanvn.vn/doanh-nhan/khoi-nghiep");
   // await getListPost("https://doanhnhanvn.vn/doanh-nhan/dau-an-nam-chau");
   // await getListPost("https://doanhnhanvn.vn/doanh-nhan/goc-nhin-doanh-nhan");

@@ -5,28 +5,29 @@ const { Readable } = require("stream");
 const query = require("./common/query");
 const moment = require("moment");
 
-// (async () => {
-//   let listSymbolData = [];
+(async () => {
+  let listSymbolData = [];
 
-//   let response = await axios.get(
-//     `http://localhost:3020/Securities?pageIndex=1&pageSize=1000`
-//   );
-//   listSymbolData = response?.data?.data || listSymbolData;
-//   response = await axios.get(
-//     `http://localhost:3020/Securities?pageIndex=2&pageSize=1000`
-//   );
-//   listSymbolData = response.data.data
-//     ? [...listSymbolData, ...response.data.data]
-//     : listSymbolData;
-//   console.log(listSymbolData.length);
-//   for (let i = 0; i < listSymbolData.length; i++) {
-//     const symbol = listSymbolData[i]?.Symbol;
-//     console.log(symbol);
-//     await getNews(symbol);
-//     //wait 5s
-//     await new Promise((resolve) => setTimeout(resolve, 5 * 1000));
-//   }
-// })();
+  let response = await axios.get(
+    `http://localhost:3020/Securities?pageIndex=1&pageSize=1000`
+  );
+  listSymbolData = response?.data?.data || listSymbolData;
+  await new Promise((resolve) => setTimeout(resolve, 5 * 1000));
+  response = await axios.get(
+    `http://localhost:3020/Securities?pageIndex=2&pageSize=1000`
+  );
+  listSymbolData = response.data.data
+    ? [...listSymbolData, ...response.data.data]
+    : listSymbolData;
+  console.log(listSymbolData.length);
+  for (let i = 0; i < listSymbolData.length; i++) {
+    const symbol = listSymbolData[i]?.Symbol;
+    console.log(symbol);
+    await getFinancialRatio(symbol);
+    //wait 5s
+    await new Promise((resolve) => setTimeout(resolve, 5 * 1000));
+  }
+})();
 
 function generateYearArray() {
   const years = [];
@@ -53,14 +54,15 @@ function yearArray() {
 
   return years;
 }
-// const resultArray = generateYearArray();
+const resultArray = generateYearArray(); //kéo data quý
 
-const resultArray = yearArray();
+// const resultArray = yearArray(); //kéo data năm
+// console.log("resultArray: ", resultArray);
 
 const getFinancialRatio = async (symbol) => {
   try {
     const response = await fetch(
-      `https://fiin-fundamental.ssi.com.vn/FinancialAnalysis/GetFinancialRatioV2?language=vi&Type=Company&OrganCode=SSI&${resultArray.join(
+      `https://fiin-fundamental.ssi.com.vn/FinancialAnalysis/GetFinancialRatioV2?language=vi&Type=Company&OrganCode=${symbol}&${resultArray.join(
         "&"
       )}`,
       {
@@ -90,7 +92,7 @@ const getFinancialRatio = async (symbol) => {
       }
     );
 
-    console.log("response: ", response);
+    // console.log("response: ", response);
     if (response.body instanceof zlib.Gunzip) {
       const gunzipStream = response.body;
 
@@ -116,7 +118,7 @@ const getFinancialRatio = async (symbol) => {
           if (!jsonObject) return;
 
           let dataNews = jsonObject?.items;
-          console.log("dataNews: ", dataNews);
+          // console.log("dataNews: ", dataNews);
           if (!dataNews) return;
           if (dataNews?.length === 0) return;
           let dataNewsMap = dataNews.map((item) => {
@@ -200,85 +202,85 @@ const getFinancialRatio = async (symbol) => {
               item?.cfa22,
             ];
           });
-          //   console.log(`dataNewsMap ${symbol}: `, dataNewsMap?.length);
-          //   await query(
-          //     `INSERT INTO financial_ratio (
-          //         organCode,
-          //         icbCode,
-          //         comTypeCode,
-          //         yearReport,
-          //         lengthReport,
-          //         yearReportCal,
-          //         lengthReportCal,
-          //         rev,
-          //         ryq34,
-          //         isa22,
-          //         ryq39,
-          //         ryq27,
-          //         ryq29,
-          //         ryq25,
-          //         ryq12,
-          //         ryq76,
-          //         ryq14,
-          //         ryq3,
-          //         ryq1,
-          //         ryq2,
-          //         ryq77,
-          //         ryq71,
-          //         ryq31,
-          //         ryq91,
-          //         ryq16,
-          //         ryq18,
-          //         ryq20,
-          //         cashCycle,
-          //         ryq10,
-          //         ryq6,
-          //         ryd11,
-          //         ryd3,
-          //         ryd21,
-          //         ryd25,
-          //         ryd26,
-          //         ryd28,
-          //         ryd14,
-          //         ryd7,
-          //         ryd30,
-          //         bsa1,
-          //         bsa2,
-          //         bsa5,
-          //         bsa8,
-          //         bsa10,
-          //         bsa159,
-          //         bsa15,
-          //         bsa18,
-          //         bsa23,
-          //         bsa24,
-          //         bsa162,
-          //         bsa27,
-          //         bsa29,
-          //         bsa43,
-          //         bsa49,
-          //         bsa50,
-          //         bsa209,
-          //         bsa53,
-          //         bsa54,
-          //         bsa55,
-          //         bsa56,
-          //         bsa58,
-          //         bsa67,
-          //         bsa71,
-          //         bsa173,
-          //         bsa78,
-          //         bsa79,
-          //         bsa80,
-          //         bsa175,
-          //         bsa86,
-          //         bsa90,
-          //         bsa96,
-          //         cfa21,
-          //         cfa22
-          //     ) VALUES ?`,
-          //     [dataFinancialMap]
-          //   );
+          console.log(`dataNewsMap ${symbol}: `, dataNewsMap?.length);
+          await query(
+            `INSERT INTO financial_ratio (
+                  organCode,
+                  icbCode,
+                  comTypeCode,
+                  yearReport,
+                  lengthReport,
+                  yearReportCal,
+                  lengthReportCal,
+                  rev,
+                  ryq34,
+                  isa22,
+                  ryq39,
+                  ryq27,
+                  ryq29,
+                  ryq25,
+                  ryq12,
+                  ryq76,
+                  ryq14,
+                  ryq3,
+                  ryq1,
+                  ryq2,
+                  ryq77,
+                  ryq71,
+                  ryq31,
+                  ryq91,
+                  ryq16,
+                  ryq18,
+                  ryq20,
+                  cashCycle,
+                  ryq10,
+                  ryq6,
+                  ryd11,
+                  ryd3,
+                  ryd21,
+                  ryd25,
+                  ryd26,
+                  ryd28,
+                  ryd14,
+                  ryd7,
+                  ryd30,
+                  bsa1,
+                  bsa2,
+                  bsa5,
+                  bsa8,
+                  bsa10,
+                  bsa159,
+                  bsa15,
+                  bsa18,
+                  bsa23,
+                  bsa24,
+                  bsa162,
+                  bsa27,
+                  bsa29,
+                  bsa43,
+                  bsa49,
+                  bsa50,
+                  bsa209,
+                  bsa53,
+                  bsa54,
+                  bsa55,
+                  bsa56,
+                  bsa58,
+                  bsa67,
+                  bsa71,
+                  bsa173,
+                  bsa78,
+                  bsa79,
+                  bsa80,
+                  bsa175,
+                  bsa86,
+                  bsa90,
+                  bsa96,
+                  cfa21,
+                  cfa22
+              ) VALUES ?`,
+            [dataFinancialMap]
+          );
 
           return data;
         } catch (error) {
@@ -292,4 +294,4 @@ const getFinancialRatio = async (symbol) => {
   }
 };
 
-getFinancialRatio("SSI");
+// getFinancialRatio("SSI");
