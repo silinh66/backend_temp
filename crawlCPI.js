@@ -1,7 +1,7 @@
 const XLSX = require("xlsx");
 const query = require("./common/query");
 
-for (let j = 10; j < 11; j++) {
+for (let j = 11; j < 12; j++) {
   const curMonth = j < 10 ? `0${j}` : j;
   const curYear = 2024;
   const fileExcelName = `${curYear}-${curMonth}.xlsx`;

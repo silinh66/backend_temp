@@ -26,7 +26,7 @@ const getPrevMonthNumber = (curMonth) => {
   return curMonth - 1;
 };
 
-const curMonthNumber = 10;
+const curMonthNumber = 11;
 const curYear = 2024;
 const prevMonth = getPrevMonthString(curMonthNumber);
 const prevMonthNumber = getPrevMonthNumber(curMonthNumber);
@@ -77,11 +77,11 @@ const crawlDauTuNganSachNhaNuoc = async () => {
   // Tìm tất cả sheet có chứa chữ "CPI"
   const sheetNamesContainingCPI = workbook.SheetNames.filter((name) => {
     return (
-      name.includes('VNSNN tháng') ||
+      name.includes("VNSNN tháng") ||
       name.includes("VDT") ||
-      name.includes("VĐT") && 
-      !name.includes("VDT TTNSNN quy") &&
-      !name.includes('VĐT TXH')
+      (name.includes("VĐT") &&
+        !name.includes("VDT TTNSNN quy") &&
+        !name.includes("VĐT TXH"))
     );
   });
 
