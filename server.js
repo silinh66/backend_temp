@@ -4783,12 +4783,19 @@ app.get("/news-type", async (req, res) => {
   const offset = (page - 1) * limit;
 
   // Cập nhật câu truy vấn SQL để bao gồm LIMIT và OFFSET
-  const sqlQuery = "SELECT * FROM news_all WHERE type = ? LIMIT ? OFFSET ?";
+  const sqlQuery =
+    "SELECT * FROM news_all WHERE type = ? AND (date = ? OR date = ?) LIMIT ? OFFSET ? ";
 
   // Thực hiện truy vấn với các tham số cập nhật
   const listPostNewsType = await query(
     sqlQuery,
-    [type, limit, offset],
+    [
+      type,
+      moment().format("YYYY-MM-DD"),
+      moment().subtract(30, "days").format("YYYY-MM-DD"),
+      limit,
+      offset,
+    ],
     (error, results) => {
       if (error) {
         res.status(500).send("Error retrieving data");
@@ -4801,7 +4808,7 @@ app.get("/news-type", async (req, res) => {
   res.send({
     status: "success",
     data: listPostNewsType,
-    length: listPostNewsType.length,
+    length: listPostNewsType?.length,
   });
 });
 
