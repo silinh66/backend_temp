@@ -2309,15 +2309,15 @@ app.get("/data-vi-mo", async function (req, res) {
       // "SELECT * FROM von_dau_tu_ngan_sach_nha_nuoc WHERE YEAR(STR_TO_DATE(time, '%d/%m/%Y')) BETWEEN 2018 AND 2023;"
     );
     let khoiLuongSanXuatCongNghiep = await query(
-      "SELECT * FROM khoi_luong_san_xuat_cong_nghiep"
+      "SELECT * FROM khoi_luong_san_xuat_cong_nghiep ORDER BY STR_TO_DATE(time, '%d/%m/%Y');"
       // "SELECT * FROM khoi_luong_san_xuat_cong_nghiep WHERE YEAR(STR_TO_DATE(time, '%d/%m/%Y')) BETWEEN 2018 AND 2023;"
     );
     let pmi = await query(
-      "SELECT * FROM pmi"
+      "SELECT * FROM pmi ORDER BY STR_TO_DATE(time, '%d/%m/%Y');"
       // "SELECT * FROM pmi WHERE YEAR(STR_TO_DATE(time, '%d/%m/%Y')) BETWEEN 2018 AND 2023;"
     );
     let iip = await query(
-      "SELECT * FROM iip"
+      "SELECT * FROM iip ORDER BY STR_TO_DATE(time, '%d/%m/%Y');"
       // "SELECT * FROM iip WHERE YEAR(STR_TO_DATE(time, '%d/%m/%Y')) BETWEEN 2018 AND 2023;"
     );
 
