@@ -272,34 +272,108 @@ app.get("/bctc/:symbol/:filename", function (req, res) {
   });
 });
 
-app.get("/getTopics/:symbol", authenticateToken, async (req, res) => {
-  let symbol = req.params.symbol;
+app.get("/getTopics/:symbol", async (req, res) => {
+  const symbol = req.params.symbol;
+  const page = parseInt(req.query.page, 10) || 1; // Ensure base 10
+  const limit = parseInt(req.query.limit, 10) || 10;
+
+  // Validate 'sort' parameter
+  const allowedSortOptions = ["newest", "most_interacted"];
+  const sort = allowedSortOptions.includes(req.query.sort)
+    ? req.query.sort
+    : "newest";
+
+  const offset = (page - 1) * limit;
+
+  // Determine ORDER BY clause based on sort parameter
+  let orderByClause = "topics.created_at DESC"; // Default to newest
+  if (sort === "most_interacted") {
+    // Sum of likes and comments for interaction
+    orderByClause = "(like_count + comment_count) DESC";
+  }
+
+  // SQL to fetch topics with counts
   const topicsSql = `
-    SELECT topics.*, users.name as author, users.image as avatar, 
-           (SELECT COUNT(*) FROM views_topic WHERE views_topic.topic_id = topics.topic_id) as view_count,
-           (SELECT COUNT(*) FROM likes_topic WHERE likes_topic.topic_id = topics.topic_id) as like_count,
-           (SELECT COUNT(*) FROM comments_topic WHERE comments_topic.topic_id = topics.topic_id) as comment_count
+    SELECT 
+      topics.*, 
+      users.name AS author, 
+      users.image AS avatar, 
+      COUNT(DISTINCT views_topic.topic_id) AS view_count,
+      COUNT(DISTINCT likes_topic.like_id) AS like_count,
+      COUNT(DISTINCT comments_topic.comment_id) AS comment_count
     FROM topics
     JOIN users ON topics.userId = users.userId
-    WHERE topics.symbol_name = ?`;
-  try {
-    let topics = await query(topicsSql, [symbol]);
+    LEFT JOIN views_topic ON views_topic.topic_id = topics.topic_id
+    LEFT JOIN likes_topic ON likes_topic.topic_id = topics.topic_id
+    LEFT JOIN comments_topic ON comments_topic.topic_id = topics.topic_id
+    WHERE topics.symbol_name = ?
+    GROUP BY topics.topic_id
+    ORDER BY ${orderByClause}
+    LIMIT ? OFFSET ?`;
 
-    // Here you would loop through the topics and for each one query the likes
-    for (let topic of topics) {
-      const likesSql = `
-        SELECT users.userId, users.name, users.image as avatar
-        FROM likes_topic
-        JOIN users ON likes_topic.userId = users.userId
-        WHERE likes_topic.topic_id = ?`;
-      let likes = await query(likesSql, [topic.topic_id]);
-      topic.likes = likes;
+  // SQL to count total topics for the symbol
+  const countSql = `
+    SELECT COUNT(*) AS total
+    FROM topics
+    WHERE topics.symbol_name = ?`;
+
+  try {
+    // Execute both queries concurrently
+    const [topics, countResult] = await Promise.all([
+      query(topicsSql, [symbol, limit, offset]),
+      query(countSql, [symbol]),
+    ]);
+
+    // Extract total count
+    const total = countResult[0]?.total || 0;
+
+    if (!Array.isArray(topics)) {
+      throw new Error("Invalid topics data received from database");
     }
 
-    res.json({ success: true, topics });
+    // Fetch likes details for the fetched topics
+    const topicIds = topics.map((topic) => topic.topic_id);
+    let likes = [];
+    if (topicIds.length > 0) {
+      const likesSql = `
+        SELECT 
+          likes_topic.topic_id, 
+          users.userId, 
+          users.name, 
+          users.image AS avatar
+        FROM likes_topic
+        JOIN users ON likes_topic.userId = users.userId
+        WHERE likes_topic.topic_id IN (?)`;
+      likes = await query(likesSql, [topicIds]);
+    }
+
+    // Map likes to their respective topics
+    const likesMap = {};
+    likes.forEach((like) => {
+      if (!likesMap[like.topic_id]) {
+        likesMap[like.topic_id] = [];
+      }
+      likesMap[like.topic_id].push({
+        userId: like.userId,
+        name: like.name,
+        avatar: like.avatar,
+      });
+    });
+
+    // Assign likes to each topic
+    const enrichedTopics = topics.map((topic) => ({
+      ...topic,
+      likes: likesMap[topic.topic_id] || [],
+    }));
+
+    // Respond with topics and total count
+    res.json({ success: true, total, topics: enrichedTopics });
   } catch (error) {
-    console.error(error);
-    res.status(500).send({ error: "An error occurred while fetching topics" });
+    console.error("Error fetching topics:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message || "An error occurred while fetching topics",
+    });
   }
 });
 
@@ -358,7 +432,18 @@ app.get("/getFollowedTopics", authenticateToken, async (req, res) => {
 });
 
 app.get("/getTopicsAll", async (req, res) => {
-  let symbol = req.params.symbol;
+  const { page = 1, pageSize = 10, sortLike = "newest" } = req.query; // Lấy sortLike từ query parameters
+  const offset = (page - 1) * pageSize;
+
+  let orderByClause = "topics.created_at DESC"; // Default: newest
+
+  if (sortLike === "more-interaction") {
+    orderByClause = `
+      (SELECT COUNT(*) FROM likes_topic WHERE likes_topic.topic_id = topics.topic_id) + 
+      (SELECT COUNT(*) FROM comments_topic WHERE comments_topic.topic_id = topics.topic_id) + 
+      (SELECT COUNT(*) FROM views_topic WHERE views_topic.topic_id = topics.topic_id) DESC`; // Sắp xếp theo tương tác
+  }
+
   const topicsSql = `
     SELECT topics.*, users.name as author, users.image as avatar, 
            (SELECT COUNT(*) FROM views_topic WHERE views_topic.topic_id = topics.topic_id) as view_count,
@@ -366,11 +451,13 @@ app.get("/getTopicsAll", async (req, res) => {
            (SELECT COUNT(*) FROM comments_topic WHERE comments_topic.topic_id = topics.topic_id) as comment_count
     FROM topics
     JOIN users ON topics.userId = users.userId
-  `;
-  try {
-    let topics = await query(topicsSql);
+    ORDER BY ${orderByClause}  -- Sắp xếp theo điều kiện đã chọn
+    LIMIT ? OFFSET ?`;
 
-    // Here you would loop through the topics and for each one query the likes
+  try {
+    let topics = await query(topicsSql, [parseInt(pageSize), offset]);
+
+    // Thêm likes vào mỗi chủ đề
     for (let topic of topics) {
       const likesSql = `
         SELECT users.userId, users.name, users.image as avatar
@@ -381,7 +468,18 @@ app.get("/getTopicsAll", async (req, res) => {
       topic.likes = likes;
     }
 
-    res.json({ success: true, topics });
+    // Lấy tổng số topic để hỗ trợ phân trang ở phía client
+    const totalTopicsSql = "SELECT COUNT(*) as total FROM topics";
+    const totalResult = await query(totalTopicsSql);
+    const totalTopics = totalResult[0].total;
+
+    res.json({
+      success: true,
+      topics,
+      totalTopics,
+      currentPage: parseInt(page),
+      pageSize: parseInt(pageSize),
+    });
   } catch (error) {
     console.error(error);
     res.status(500).send({ error: "An error occurred while fetching topics" });
@@ -4910,7 +5008,7 @@ const getNewsDetail = async (url) => {
       introduction = des.replace("(Chinhphu.vn) - ", "");
 
       date = $("div.detail-time").text().trim();
-      content = $("div.detail-mcontent").html();
+      content = $("div.detail-content").html();
       sourceUrl = url;
       follow = "Theo Báo Chính Phủ";
 
