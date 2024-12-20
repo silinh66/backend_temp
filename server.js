@@ -89,10 +89,11 @@ app.use(cors(isProduct ? corsOptions : { origin: "*" }));
 //     allowedHeaders: ["Content-Type", "Authorization"], // Allow these headers
 //   })
 // );
-app.use(bodyParser.json({ type: "application/json" }));
+app.use(bodyParser.json({ type: "application/json", limit: "50mb" }));
 app.use(
   bodyParser.urlencoded({
     extended: true,
+    limit: "50mb",
   })
 );
 
