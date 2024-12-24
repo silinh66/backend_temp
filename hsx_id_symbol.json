@@ -4,6 +4,969 @@
   "records": 1985,
   "rows": [
     {
+      "id": "73_1",
+      "cell": [
+        "73_1",
+        "LBM                 ",
+        "Công ty Cổ phần Khoáng sản và Vật liệu Xây dựng Lâm Đồng",
+        "<a href=\"/Modules/Listed/Web/SymbolView/73\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "73_6",
+      "cell": [
+        "73_6",
+        "NSI",
+        "Công ty Cổ phần Chứng khoán Quốc Gia",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/73\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "74_1",
+      "cell": [
+        "74_1",
+        "VPK                 ",
+        "Công ty Cổ phần Bao bì Dầu thực vật",
+        "<a href=\"/Modules/Listed/Web/SymbolView/74\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "74_6",
+      "cell": [
+        "74_6",
+        "VPS",
+        "Công ty Cổ phần Chứng khoán VPS",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/74\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "75_1",
+      "cell": [
+        "75_1",
+        "NSC                 ",
+        "Công ty Cổ phần Tập đoàn Giống cây trồng Việt Nam",
+        "<a href=\"/Modules/Listed/Web/SymbolView/75\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "76_1",
+      "cell": [
+        "76_1",
+        "SHC                 ",
+        "CÔNG TY CỔ PHẦN HÀNG HẢI SÀI GÒN",
+        "<a href=\"/Modules/Listed/Web/SymbolView/76\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "77_1",
+      "cell": [
+        "77_1",
+        "VTA                 ",
+        "CÔNG TY CỔ PHẦN VITALY",
+        "<a href=\"/Modules/Listed/Web/SymbolView/77\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "78_6",
+      "cell": [
+        "78_6",
+        "KLS",
+        "Công ty Cổ phần Chứng khoán Kim Long",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/78\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "78_1",
+      "cell": [
+        "78_1",
+        "SJ1                 ",
+        "CÔNG TY CỔ PHẦN THUỶ SẢN SỐ 1",
+        "<a href=\"/Modules/Listed/Web/SymbolView/78\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "79_6",
+      "cell": [
+        "79_6",
+        "ABS",
+        "Công ty Cổ phần Chứng khoán An Bình",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/79\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "79_1",
+      "cell": [
+        "79_1",
+        "TCR                 ",
+        "Công ty Cổ phần Công nghiệp Gốm sứ TAICERA",
+        "<a href=\"/Modules/Listed/Web/SymbolView/79\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "80_1",
+      "cell": [
+        "80_1",
+        "SGC                 ",
+        "CÔNG TY CỔ PHẦN XUẤT NHẬP KHẨU SA GIANG",
+        "<a href=\"/Modules/Listed/Web/SymbolView/80\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "81_1",
+      "cell": [
+        "81_1",
+        "HMC                 ",
+        "Công ty Cổ phần Kim khí Thành phố Hồ Chí Minh - Vnsteel",
+        "<a href=\"/Modules/Listed/Web/SymbolView/81\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "82_6",
+      "cell": [
+        "82_6",
+        "DAS",
+        "Công ty TNHH MTV Chứng khoán Ngân hàng Đông Á",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/82\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "82_1",
+      "cell": [
+        "82_1",
+        "TNA                 ",
+        "Công ty Cổ phần Thương mại Xuất nhập khẩu Thiên Nam",
+        "<a href=\"/Modules/Listed/Web/SymbolView/82\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "83_1",
+      "cell": [
+        "83_1",
+        "BBC                 ",
+        "Công ty Cổ phần BIBICA",
+        "<a href=\"/Modules/Listed/Web/SymbolView/83\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "84_1",
+      "cell": [
+        "84_1",
+        "HRC                 ",
+        "Công ty Cổ phần Cao su Hòa Bình",
+        "<a href=\"/Modules/Listed/Web/SymbolView/84\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "84_6",
+      "cell": [
+        "84_6",
+        "HSC",
+        "Công ty Cổ phần Chứng khoán TP. Hồ Chí Minh",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/84\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "85_1",
+      "cell": [
+        "85_1",
+        "HBC                 ",
+        "Công ty Cổ phần Tập đoàn Xây dựng Hòa Bình",
+        "<a href=\"/Modules/Listed/Web/SymbolView/85\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "1_1",
+      "cell": [
+        "1_1",
+        "BT6                 ",
+        "Công ty Cổ phần Beton 6",
+        "<a href=\"/Modules/Listed/Web/SymbolView/1\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "2_1",
+      "cell": [
+        "2_1",
+        "COM                 ",
+        "Công ty Cổ phần Vật tư - Xăng dầu",
+        "<a href=\"/Modules/Listed/Web/SymbolView/2\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "2_6",
+      "cell": [
+        "2_6",
+        "VSC",
+        "Công ty Cổ phần Chứng khoán Việt",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/2\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "3_1",
+      "cell": [
+        "3_1",
+        "TTC                 ",
+        "CÔNG TY CỔ PHẦN GẠCH MEN THANH THANH",
+        "<a href=\"/Modules/Listed/Web/SymbolView/3\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "4_6",
+      "cell": [
+        "4_6",
+        "ASC",
+        "Công ty Cổ phần Chứng khoán ASC",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/4\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "4_1",
+      "cell": [
+        "4_1",
+        "SFN                 ",
+        "CÔNG TY CỔ PHẦN DỆT LƯỚI SÀI GÒN",
+        "<a href=\"/Modules/Listed/Web/SymbolView/4\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "5_6",
+      "cell": [
+        "5_6",
+        "HTS",
+        "Công ty Cổ phần Chứng khoán Hưng Thịnh",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/5\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "5_1",
+      "cell": [
+        "5_1",
+        "PJT                 ",
+        "Công ty Cổ phần Vận tải Xăng dầu Đường thủy Petrolimex",
+        "<a href=\"/Modules/Listed/Web/SymbolView/5\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "6_6",
+      "cell": [
+        "6_6",
+        "LVS",
+        "CÔNG TY CỔ PHẦN CHỨNG KHOÁN LIÊN VIỆT",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/6\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "6_1",
+      "cell": [
+        "6_1",
+        "MCP                 ",
+        "Công ty Cổ phần In và Bao bì Mỹ Châu",
+        "<a href=\"/Modules/Listed/Web/SymbolView/6\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "7_1",
+      "cell": [
+        "7_1",
+        "BMC                 ",
+        "Công ty Cổ phần Khoáng sản Bình Định",
+        "<a href=\"/Modules/Listed/Web/SymbolView/7\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "7_6",
+      "cell": [
+        "7_6",
+        "CSI",
+        "Công ty Cổ phần Chứng khoán Kiến Thiết Việt Nam",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/7\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "8_1",
+      "cell": [
+        "8_1",
+        "HAP                 ",
+        "Công ty Cổ phần Tập đoàn HAPACO",
+        "<a href=\"/Modules/Listed/Web/SymbolView/8\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "8_6",
+      "cell": [
+        "8_6",
+        "JSI",
+        "Công ty Trách nhiệm Hữu hạn Chứng khoán Nhật Bản",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/8\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "9_1",
+      "cell": [
+        "9_1",
+        "TMS                 ",
+        "Công ty Cổ phần Transimex",
+        "<a href=\"/Modules/Listed/Web/SymbolView/9\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "10_1",
+      "cell": [
+        "10_1",
+        "LAF                 ",
+        "Công ty Cổ phần Chế biến Hàng xuất khẩu Long An",
+        "<a href=\"/Modules/Listed/Web/SymbolView/10\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "10_6",
+      "cell": [
+        "10_6",
+        "TSS",
+        "CÔNG TY CỔ PHẦN CHỨNG KHOÁN TRƯỜNG SƠN",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/10\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "11_1",
+      "cell": [
+        "11_1",
+        "GIL                 ",
+        "Công ty Cổ phần Sản xuất Kinh doanh Xuất nhập khẩu Bình Thạnh",
+        "<a href=\"/Modules/Listed/Web/SymbolView/11\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "11_6",
+      "cell": [
+        "11_6",
+        "ISC",
+        "Công ty Cổ phần Chứng khoán Công Nghiệp Việt Nam",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/11\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "12_1",
+      "cell": [
+        "12_1",
+        "VFC                 ",
+        "Công ty Cổ phần Vinafco",
+        "<a href=\"/Modules/Listed/Web/SymbolView/12\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "13_1",
+      "cell": [
+        "13_1",
+        "FPT                 ",
+        "Công ty Cổ phần FPT",
+        "<a href=\"/Modules/Listed/Web/SymbolView/13\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "13_6",
+      "cell": [
+        "13_6",
+        "VFS",
+        "Công ty Cổ phần Chứng khoán Nhất Việt",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/13\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "14_6",
+      "cell": [
+        "14_6",
+        "FNS",
+        "Công ty Cổ phần Chứng khoán Funan",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/14\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "14_1",
+      "cell": [
+        "14_1",
+        "IFS                 ",
+        "Công ty Cổ phần Thực phẩm Quốc tế",
+        "<a href=\"/Modules/Listed/Web/SymbolView/14\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "15_1",
+      "cell": [
+        "15_1",
+        "KHA                 ",
+        "Công ty Cổ phần Đầu tư và Dịch vụ Khánh Hội",
+        "<a href=\"/Modules/Listed/Web/SymbolView/15\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "16_1",
+      "cell": [
+        "16_1",
+        "HAS                 ",
+        "Công ty Cổ phần HACISCO",
+        "<a href=\"/Modules/Listed/Web/SymbolView/16\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "16_6",
+      "cell": [
+        "16_6",
+        "NVS",
+        "Công ty Cổ phần Chứng khoán Navibank",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/16\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "17_1",
+      "cell": [
+        "17_1",
+        "VTC                 ",
+        "CÔNG TY CỔ PHẦN VIỄN THÔNG VTC",
+        "<a href=\"/Modules/Listed/Web/SymbolView/17\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "17_6",
+      "cell": [
+        "17_6",
+        "VTS",
+        "Công ty Cổ phần Chứng khoán Việt Thành",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/17\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "18_1",
+      "cell": [
+        "18_1",
+        "PMS                 ",
+        "CÔNG TY CỔ PHẦN CƠ KHÍ XĂNG DẦU",
+        "<a href=\"/Modules/Listed/Web/SymbolView/18\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "19_1",
+      "cell": [
+        "19_1",
+        "BBT                 ",
+        "CÔNG TY CỔ PHẦN BÔNG BẠCH TUYẾT",
+        "<a href=\"/Modules/Listed/Web/SymbolView/19\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "20_1",
+      "cell": [
+        "20_1",
+        "SMC                 ",
+        "Công ty Cổ phần Đầu tư Thương mại SMC",
+        "<a href=\"/Modules/Listed/Web/SymbolView/20\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "21_1",
+      "cell": [
+        "21_1",
+        "MCV                 ",
+        "CTCP Cavico Việt nam Khai thác mỏ và Xây dựng",
+        "<a href=\"/Modules/Listed/Web/SymbolView/21\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "22_6",
+      "cell": [
+        "22_6",
+        "AAS",
+        "Công ty Cổ phần Chứng khoán Á Âu",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/22\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "22_1",
+      "cell": [
+        "22_1",
+        "PAC                 ",
+        "Công ty Cổ phần Pin Ắc quy miền Nam",
+        "<a href=\"/Modules/Listed/Web/SymbolView/22\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "23_6",
+      "cell": [
+        "23_6",
+        "BOS",
+        "Công ty Cổ phần Chứng khoán BOS",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/23\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "23_1",
+      "cell": [
+        "23_1",
+        "PGC                 ",
+        "Tổng Công ty Gas Petrolimex - Công ty Cổ phần",
+        "<a href=\"/Modules/Listed/Web/SymbolView/23\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "24_6",
+      "cell": [
+        "24_6",
+        "HBS",
+        "Công ty Cổ phần Chứng khoán Hòa Bình",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/24\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "24_1",
+      "cell": [
+        "24_1",
+        "IMP                 ",
+        "Công ty Cổ phần Dược phẩm Imexpharm",
+        "<a href=\"/Modules/Listed/Web/SymbolView/24\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "25_1",
+      "cell": [
+        "25_1",
+        "FPC                 ",
+        "Công ty Cổ phần Full Power",
+        "<a href=\"/Modules/Listed/Web/SymbolView/25\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "25_6",
+      "cell": [
+        "25_6",
+        "SSV",
+        "Công ty TNHH Chứng khoán SHINHAN Việt Nam",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/25\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "26_1",
+      "cell": [
+        "26_1",
+        "SGH                 ",
+        "CÔNG TY CỔ PHẦN KHÁCH SẠN SÀI GÒN",
+        "<a href=\"/Modules/Listed/Web/SymbolView/26\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "27_1",
+      "cell": [
+        "27_1",
+        "CAN                 ",
+        "CÔNG TY CỔ PHẦN ĐỒ HỘP HẠ LONG",
+        "<a href=\"/Modules/Listed/Web/SymbolView/27\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "28_1",
+      "cell": [
+        "28_1",
+        "DPC                 ",
+        "CÔNG TY CỔ PHẦN NHỰA ĐÀ NẴNG",
+        "<a href=\"/Modules/Listed/Web/SymbolView/28\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "28_6",
+      "cell": [
+        "28_6",
+        "MAS",
+        "Công ty Cổ phần Chứng khoán Mirae Asset (Việt Nam)",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/28\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "29_1",
+      "cell": [
+        "29_1",
+        "DCT                 ",
+        "Công ty Cổ phần Tấm lợp Vật liệu Xây dựng Đồng Nai",
+        "<a href=\"/Modules/Listed/Web/SymbolView/29\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "30_1",
+      "cell": [
+        "30_1",
+        "BHS                 ",
+        "Công ty Cổ phần Đường Biên Hòa",
+        "<a href=\"/Modules/Listed/Web/SymbolView/30\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "30_6",
+      "cell": [
+        "30_6",
+        "BSI",
+        "Công ty Cổ phần Chứng khoán BETA",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/30\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "31_1",
+      "cell": [
+        "31_1",
+        "CII                 ",
+        "Công ty Cổ phần Đầu tư Hạ tầng Kỹ thuật TP.HCM",
+        "<a href=\"/Modules/Listed/Web/SymbolView/31\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "32_1",
+      "cell": [
+        "32_1",
+        "RHC                 ",
+        "CÔNG TY CỔ PHẦN THỦY ĐIỆN RY NINH II",
+        "<a href=\"/Modules/Listed/Web/SymbolView/32\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "32_6",
+      "cell": [
+        "32_6",
+        "WSS",
+        "Công ty Cổ phần Chứng khoán Phố WALL",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/32\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "33_1",
+      "cell": [
+        "33_1",
+        "REE                 ",
+        "Công ty Cổ phần Cơ Điện Lạnh",
+        "<a href=\"/Modules/Listed/Web/SymbolView/33\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "33_6",
+      "cell": [
+        "33_6",
+        "VIX",
+        "Công ty Cổ phần Chứng khoán VIX",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/33\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "34_6",
+      "cell": [
+        "34_6",
+        "OSC",
+        "Công ty Cổ phần Chứng khoán Đại Tây Dương",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/34\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "34_1",
+      "cell": [
+        "34_1",
+        "RAL                 ",
+        "Công ty Cổ phần Bóng đèn Phích nước Rạng Đông",
+        "<a href=\"/Modules/Listed/Web/SymbolView/34\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "35_1",
+      "cell": [
+        "35_1",
+        "FMC                 ",
+        "Công ty Cổ phần Thực phẩm Sao Ta",
+        "<a href=\"/Modules/Listed/Web/SymbolView/35\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "35_6",
+      "cell": [
+        "35_6",
+        "VSM",
+        "Công ty Cổ phần Chứng khoán VSM",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/35\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "36_1",
+      "cell": [
+        "36_1",
+        "SAM                 ",
+        "Công ty Cổ phần SAM Holdings",
+        "<a href=\"/Modules/Listed/Web/SymbolView/36\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "36_6",
+      "cell": [
+        "36_6",
+        "SHS",
+        "Công ty Cổ phần Chứng khoán Sài Gòn - Hà Nội",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/36\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "37_1",
+      "cell": [
+        "37_1",
+        "TRI                 ",
+        "CTCP Nước giải khát Sài gòn",
+        "<a href=\"/Modules/Listed/Web/SymbolView/37\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "38_6",
+      "cell": [
+        "38_6",
+        "APG",
+        "Công ty Cổ phần Chứng khoán APG",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/38\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "38_1",
+      "cell": [
+        "38_1",
+        "BTC                 ",
+        "CÔNG TY CỔ PHẦN CƠ KHÍ VÀ XÂY DỰNG BÌNH TRIỆU",
+        "<a href=\"/Modules/Listed/Web/SymbolView/38\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "39_1",
+      "cell": [
+        "39_1",
+        "BPC                 ",
+        "CÔNG TY CỔ PHẦN BAO BÌ BỈM SƠN",
+        "<a href=\"/Modules/Listed/Web/SymbolView/39\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "39_6",
+      "cell": [
+        "39_6",
+        "GLS",
+        "Công ty Cổ phần Chứng khoán Sen Vàng",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/39\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "1_6",
+      "cell": [
+        "1_6",
+        "SBBS",
+        "Công ty Cổ phần Chứng khoán Saigonbank – Berjaya",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/1\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "3_6",
+      "cell": [
+        "3_6",
+        "SHBS",
+        "Công ty Cổ phần Chứng khoán SHB",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/3\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "9_6",
+      "cell": [
+        "9_6",
+        "ASAM",
+        "Công ty Cổ phần Chứng khoán ASAM",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/9\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "12_6",
+      "cell": [
+        "12_6",
+        "STSC",
+        "Công ty Cổ phần Chứng khoán STSC",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/12\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "15_6",
+      "cell": [
+        "15_6",
+        "KBSV",
+        "Công ty Cổ phần Chứng khoán KB Việt Nam",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/15\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "18_6",
+      "cell": [
+        "18_6",
+        "SBSI",
+        "Công ty Cổ phần Chứng khoán Stanley Brothers",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/18\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "19_6",
+      "cell": [
+        "19_6",
+        "VDSE",
+        "Công ty Cổ phần Chứng khoán Viễn Đông",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/19\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "20_6",
+      "cell": [
+        "20_6",
+        "BMSC",
+        "Công ty Cổ phần Chứng khoán Bảo Minh",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/20\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "21_6",
+      "cell": [
+        "21_6",
+        "TCSC",
+        "Công ty Cổ phần Chứng khoán Thành Công",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/21\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "26_6",
+      "cell": [
+        "26_6",
+        "ECC1",
+        "Công ty Cổ phần Chứng khoán Eurocapital ",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/26\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "27_6",
+      "cell": [
+        "27_6",
+        "MSVN",
+        "Công ty TNHH Chứng khoán Maybank",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/27\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "29_6",
+      "cell": [
+        "29_6",
+        "VICS",
+        "Công ty Cổ phần Chứng khoán Thương mại và Công nghiệp Việt Nam",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/29\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "31_6",
+      "cell": [
+        "31_6",
+        "ATSC",
+        "Công ty Cổ phần Chứng khoán An Thành",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/31\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "41_6",
+      "cell": [
+        "41_6",
+        "DNSE",
+        "Công ty Cổ phần Chứng khoán DNSE",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/41\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "43_6",
+      "cell": [
+        "43_6",
+        "GBVS",
+        "Công ty Cổ phần Chứng khoán Golden Bridge Việt Nam",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/43\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "47_6",
+      "cell": [
+        "47_6",
+        "FPTS",
+        "Công ty Cổ phần Chứng khoán FPT",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/47\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "49_6",
+      "cell": [
+        "49_6",
+        "VQSC",
+        "Công ty Cổ phần Chứng khoán Việt Quốc",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/49\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "50_6",
+      "cell": [
+        "50_6",
+        "SMES",
+        "CÔNG TY CỔ PHẦN CHỨNG KHOÁN SME",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/50\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "51_6",
+      "cell": [
+        "51_6",
+        "VNSC",
+        "Công ty Cổ phần Chứng khoán VINA",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/51\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "52_6",
+      "cell": [
+        "52_6",
+        "CLSC",
+        "CÔNG TY CỔ PHẦN CHỨNG KHOÁN CHỢ LỚN",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/52\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "53_6",
+      "cell": [
+        "53_6",
+        "VSSC",
+        "Công ty Cổ phần Chứng Khoán Sao Việt",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/53\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "54_6",
+      "cell": [
+        "54_6",
+        "VITS",
+        "Công ty Cổ phần Chứng khoán VIT",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/54\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "55_6",
+      "cell": [
+        "55_6",
+        "JBSV",
+        "Công ty TNHH Chứng khoán JB Việt Nam",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/55\">Xem chi tiết</a>"
+      ]
+    },
+    {
+      "id": "56_6",
+      "cell": [
+        "56_6",
+        "KAFI",
+        "Công ty Cổ phần Chứng khoán KAFI",
+        "<a href=\"/Modules/StockMember/Web/SecOrgView/56\">Xem chi tiết</a>"
+      ]
+    },
+    {
       "id": "61_6",
       "cell": [
         "61_6",

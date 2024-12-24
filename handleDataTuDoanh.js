@@ -5,7 +5,7 @@ const handleDataTuDoanh = async () => {
 
   // Đường dẫn tới file Excel của bạn
   const workbook = XLSX.readFile(
-    "./file_data/20241216_20241216 - Thong ke Giao Dich Tu doanh.xlsx"
+    "./file_data/20241220_20241220 - Thong ke Giao Dich Tu doanh.xlsx"
     // "./file_data/20240301_20240301 - Thong ke Giao Dich Tu doanh.xlsx"
   );
   const sheetName = "Table 1"; // Tên của sheet bạn muốn đọc
