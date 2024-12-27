@@ -35,9 +35,9 @@ cron.schedule("*/15 * * * *", () => {
 cron.schedule("*/5 * * * * *", () => {
   getIndexPointHOSE();
   getIndexPointHNX();
-  getNuocNgoai();
+  // getNuocNgoai();
   // getTuDoanhRong();
-  getNuocNgoaiMuaRong();
+  // getNuocNgoaiMuaRong();
   getChangeCount();
   getIboard();
 });
