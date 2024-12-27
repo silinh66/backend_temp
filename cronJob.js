@@ -35,11 +35,11 @@ cron.schedule("*/15 * * * *", () => {
 cron.schedule("*/5 * * * * *", () => {
   getIndexPointHOSE();
   getIndexPointHNX();
-  // getNuocNgoai();
-  // getTuDoanhRong();
-  // getNuocNgoaiMuaRong();
+  getNuocNgoai();
+  getTuDoanhRong();
+  getNuocNgoaiMuaRong();
   getChangeCount();
-  getIboard();
+  // getIboard();
 });
 
 //cronjob every 15 seconds
@@ -170,7 +170,7 @@ function getPreviousDate() {
 async function getNuocNgoaiMuaRong() {
   // Simulate API response
   const apiResponse = await axios.get(
-    `https://finfo-api.vndirect.com.vn/v4/foreigns?q=code:STOCK_HNX,STOCK_UPCOM,STOCK_HOSE,ETF_HOSE,IFC_HOSE&sort=tradingDate&size=100`
+    `https://api-finfo.vndirect.com.vn/v4/foreigns?q=code:STOCK_HNX,STOCK_UPCOM,STOCK_HOSE,ETF_HOSE,IFC_HOSE&sort=tradingDate&size=100`
   ); // Your HTML response goes here
   const response = apiResponse?.data?.data;
 
@@ -3698,7 +3698,7 @@ const getThanhKhoanHistoryHNX = async () => {
 const getNuocNgoai = async () => {
   // Simulate API response
   const apiResponse = await axios.get(
-    `https://finfo-api.vndirect.com.vn/v4/foreigns?q=code:STOCK_HNX,STOCK_UPCOM,STOCK_HOSE,ETF_HOSE,IFC_HOSE&sort=tradingDate&size=100`
+    `https://api-finfo.vndirect.com.vn/v4/foreigns?q=code:STOCK_HNX,STOCK_UPCOM,STOCK_HOSE,ETF_HOSE,IFC_HOSE&sort=tradingDate&size=100`
   ); // Your HTML response goes here
   const response = apiResponse?.data?.data;
 
@@ -3718,7 +3718,7 @@ const getNuocNgoai = async () => {
 const getTuDoanhRong = async () => {
   // Simulate API response
   const apiResponse = await axios.get(
-    `https://finfo-api.vndirect.com.vn/v4/proprietary_trading?q=code:HNX,VNINDEX,UPCOM&sort=date:desc&size=600`
+    `https://api-finfo.vndirect.com.vn/v4/proprietary_trading?q=code:HNX,VNINDEX,UPCOM&sort=date:desc&size=600`
   ); // Your HTML response goes here
   const response = apiResponse?.data?.data;
 
