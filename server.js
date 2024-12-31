@@ -4872,7 +4872,9 @@ app.get("/news-type", async (req, res) => {
   const { type } = req.query;
   const limit = parseInt(req.query.limit, 12) || 12; // Giá trị mặc định là 10 bản ghi mỗi trang
   const page = parseInt(req.query.page, 10) || 1; // Mặc định là trang số 1
-
+  let tableName = "news_all";
+  console.log("type: ", type);
+  if (type === "Bất động sản" || type === "Tài chính" || type === "Công nghệ") tableName = "news_all_detail";
   if (!type) {
     res.status(400).send("Type parameter is required");
     return;
@@ -4882,8 +4884,8 @@ app.get("/news-type", async (req, res) => {
   const offset = (page - 1) * limit;
 
   // Cập nhật câu truy vấn SQL để bao gồm LIMIT và OFFSET
-  const sqlQuery =
-    "SELECT * FROM news_all WHERE type = ? AND (date = ? OR date = ?) LIMIT ? OFFSET ? ";
+  const sqlQuery = `SELECT * FROM ${tableName} WHERE type = ? AND (date = ? OR date = ?) LIMIT ? OFFSET ? `;
+  console.log("sqlQuery: ", sqlQuery);
 
   // Thực hiện truy vấn với các tham số cập nhật
   const listPostNewsType = await query(
@@ -5084,7 +5086,18 @@ const getNewsDetail = async (url) => {
 
 app.post("/news-detail", async function (req, res) {
   let url = req.body.url;
-  let detailNews = await getNewsDetail(url);
+  let id = req.body.id;
+  let detailNews = {};
+  console.log("id: ", id);
+  if (!!id && id !== "null") {
+    let detailQuery = await query(
+      "SELECT * FROM news_all_detail WHERE id = ?",
+      [id]
+    );
+    detailNews = detailQuery?.length > 0 ? detailQuery[0] : {};
+  } else {
+    detailNews = await getNewsDetail(url);
+  }
   res.send({ error: false, data: detailNews, message: "news detail." });
 });
 

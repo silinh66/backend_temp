@@ -30,22 +30,27 @@ cron.schedule("*/15 * * * *", () => {
   // getTopGiaTriRongHOSE();
   // getNewsAll();
 });
+//cronjob every 5 minutes
+cron.schedule("*/5 * * * *", () => {
+  getNewsAll();
+  getNewsAllDetail();
+});
 
 //cronjob every 5 seconds
 cron.schedule("*/5 * * * * *", () => {
-  getIndexPointHOSE();
-  getIndexPointHNX();
-  getNuocNgoai();
-  getTuDoanhRong();
-  getNuocNgoaiMuaRong();
-  getChangeCount();
+  // getChangeCount();
   // getIboard();
 });
 
 //cronjob every 15 seconds
 cron.schedule("*/15 * * * * *", () => {
   // getSignal();
-  getNewsAll();
+  getIndexPointHOSE();
+  getIndexPointHNX();
+  getNuocNgoai();
+  getTuDoanhRong();
+  getNuocNgoaiMuaRong();
+  getChangeCount();
   getGiaVangNew();
   fetchThanhKhoanData("hose"); // Fetches latest for HOSE
   fetchThanhKhoanData("hnx"); // Fetches latest for HNX
@@ -204,605 +209,170 @@ function extractBankData(html) {
   return bankData;
 }
 
-// async function getNewsAll() {
-//   let listPost = [];
-//   const getListPost = async (sourceUrl) => {
-//     const response = await axios.get(sourceUrl);
-//     const html = response.data;
-//     const $ = cheerio.load(html);
+async function getNewsAllDetail() {
+  let listPost = [];
+  const getListPost = async (sourceUrl) => {
+    const response = await axios.get(sourceUrl);
+    const html = response.data;
+    const $ = cheerio.load(html);
 
-//     //   let listPost = [];
-//     let promises = [];
+    //   let listPost = [];
+    let promises = [];
 
-//     try {
-//       switch (sourceUrl) {
-//         case "https://baochinhphu.vn":
-//           $(".box-focus-item").each((index, element) => {
-//             promises.push(
-//               new Promise(async (resolve) => {
-//                 let title = $(element).find("a").text().trim();
-//                 let url = $(element).find("a").attr("href");
-//                 //   let image = $(element).find("img").attr("src");
-//                 if (
-//                   url.includes("en.baochinhphu.vn") ||
-//                   url.includes("cn.baochinhphu.vn") ||
-//                   url.includes("media.chinhphu.vn")
-//                 ) {
-//                   resolve();
-//                 } else {
-//                   const responseDetail = await axios.get(`${sourceUrl}${url}`);
-//                   const htmlDetail = responseDetail.data;
-//                   const $Detail = cheerio.load(htmlDetail);
-//                   let image = $Detail(".detail-content")
-//                     ?.find("img")
-//                     ?.attr("src");
-//                   if (!image) {
-//                     image = $Detail(".containe-777")?.find("img")?.attr("src");
-//                   }
-//                   let time = $Detail(".detail-time")
-//                     ?.text()
-//                     ?.trim()
-//                     ?.replaceAll("\n", "")
-//                     ?.replace(/\s+/g, " ");
-//                   if (time === "") {
-//                     time = $Detail(".time")?.text()?.trim()?.slice(0, 16);
-//                   }
-//                   let description = $Detail(".detail-sapo")?.text()?.trim();
-//                   if (description === "") {
-//                     description = $Detail(".list__rf-sapo")?.text()?.trim();
-//                   }
-//                   listPost.push({
-//                     title,
-//                     url: `${sourceUrl}${url}`,
-//                     image,
-//                     time,
-//                     description,
-//                   });
-//                   resolve();
-//                 }
-//               })
-//             );
-//           });
+    try {
+      switch (sourceUrl) {
+        case "https://nguoiquansat.vn/bat-dong-san":
+          $(".b-grid").each((index, element) => {
+            let title = $(element).find(".b-grid__title").text().trim();
+            let url = $(element).find("a").attr("href");
+            console.log("url: ", url);
+            let image = $(element).find("img").attr("src");
+            console.log("image: ", image);
+            let des1 = $(element).find(".b-grid__desc").text().trim();
+            let des2 = $(element).find(".b-grid__row").text().trim();
+            let object = {
+              title: title,
+              url: url,
+              image: image,
+              description: des1 ? des1 : des2,
+              type: "Bất động sản",
+            };
+            listPost.push(object);
+          });
 
-//           $(".home__sfw-item").each((index, element) => {
-//             promises.push(
-//               new Promise(async (resolve) => {
-//                 let title = $(element).find("a").text().trim();
-//                 let url = $(element).find("a").attr("href");
-//                 //   let image = $(element).find("img").attr("src");
-//                 if (
-//                   url.includes("en.baochinhphu.vn") ||
-//                   url.includes("cn.baochinhphu.vn") ||
-//                   url.includes("media.chinhphu.vn")
-//                 ) {
-//                   resolve();
-//                 } else {
-//                   const responseDetail = await axios.get(`${sourceUrl}${url}`);
-//                   const htmlDetail = responseDetail.data;
-//                   const $Detail = cheerio.load(htmlDetail);
-//                   let image = $Detail(".detail-content")
-//                     ?.find("img")
-//                     ?.attr("src");
-//                   if (!image) {
-//                     image = $Detail(".containe-777")?.find("img")?.attr("src");
-//                   }
-//                   let time = $Detail(".detail-time")
-//                     ?.text()
-//                     ?.trim()
-//                     ?.replaceAll("\n", "")
-//                     ?.replace(/\s+/g, " ");
-//                   if (time === "") {
-//                     time = $Detail(".time")?.text()?.trim()?.slice(0, 16);
-//                   }
-//                   let description = $Detail(".detail-sapo")?.text()?.trim();
-//                   if (description === "") {
-//                     description = $Detail(".list__rf-sapo")?.text()?.trim();
-//                   }
-//                   listPost.push({
-//                     title,
-//                     url: `${sourceUrl}${url}`,
-//                     image,
-//                     time,
-//                     description,
-//                   });
-//                   resolve();
-//                 }
-//               })
-//             );
-//           });
+          break;
+        case "https://nguoiquansat.vn/tai-chinh-ngan-hang":
+          $(".b-grid").each((index, element) => {
+            let title = $(element).find(".b-grid__title").text().trim();
+            let url = $(element).find("a").attr("href");
+            console.log("url: ", url);
+            let image = $(element).find("img").attr("src");
+            console.log("image: ", image);
+            let des1 = $(element).find(".b-grid__desc").text().trim();
+            let des2 = $(element).find(".b-grid__row").text().trim();
+            let object = {
+              title: title,
+              url: url,
+              image: image,
+              description: des1 ? des1 : des2,
+              type: "Tài chính",
+            };
+            listPost.push(object);
+          });
 
-//           $(".box-item-top").each((index, element) => {
-//             promises.push(
-//               new Promise(async (resolve) => {
-//                 let title = $(element).find("a").text().trim();
-//                 let url = $(element).find("a").attr("href");
-//                 //   let image = $(element).find("img").attr("src");
-//                 if (
-//                   url.includes("en.baochinhphu.vn") ||
-//                   url.includes("cn.baochinhphu.vn") ||
-//                   url.includes("media.chinhphu.vn")
-//                 ) {
-//                   resolve();
-//                 } else {
-//                   const responseDetail = await axios.get(`${sourceUrl}${url}`);
-//                   const htmlDetail = responseDetail.data;
-//                   const $Detail = cheerio.load(htmlDetail);
-//                   let image = $Detail(".detail-content")
-//                     ?.find("img")
-//                     ?.attr("src");
-//                   if (!image) {
-//                     image = $Detail(".containe-777")?.find("img")?.attr("src");
-//                   }
-//                   let time = $Detail(".detail-time")
-//                     ?.text()
-//                     ?.trim()
-//                     ?.replaceAll("\n", "")
-//                     ?.replace(/\s+/g, " ");
-//                   if (time === "") {
-//                     time = $Detail(".time")?.text()?.trim()?.slice(0, 16);
-//                   }
-//                   let description = $Detail(".detail-sapo")?.text()?.trim();
-//                   if (description === "") {
-//                     description = $Detail(".list__rf-sapo")?.text()?.trim();
-//                   }
-//                   listPost.push({
-//                     title,
-//                     url: `${sourceUrl}${url}`,
-//                     image,
-//                     time,
-//                     description,
-//                   });
-//                   resolve();
-//                 }
-//               })
-//             );
-//           });
+          break;
+        case "https://nguoiquansat.vn/cong-nghe":
+          $(".b-grid").each((index, element) => {
+            let title = $(element).find(".b-grid__title").text().trim();
+            let url = $(element).find("a").attr("href");
+            console.log("url: ", url);
+            let image = $(element).find("img").attr("src");
+            console.log("image: ", image);
+            let des1 = $(element).find(".b-grid__desc").text().trim();
+            let des2 = $(element).find(".b-grid__row").text().trim();
+            let object = {
+              title: title,
+              url: url,
+              image: image,
+              description: des1 ? des1 : des2,
+              type: "Công nghệ",
+            };
+            listPost.push(object);
+          });
 
-//           $(".home-box-related-item").each((index, element) => {
-//             promises.push(
-//               new Promise(async (resolve) => {
-//                 let title = $(element).find("a").text().trim();
-//                 let url = $(element).find("a").attr("href");
-//                 //   let image = $(element).find("img").attr("src");
-//                 if (
-//                   url.includes("en.baochinhphu.vn") ||
-//                   url.includes("cn.baochinhphu.vn") ||
-//                   url.includes("media.chinhphu.vn")
-//                 ) {
-//                   resolve();
-//                 } else {
-//                   const responseDetail = await axios.get(`${sourceUrl}${url}`);
-//                   const htmlDetail = responseDetail.data;
-//                   const $Detail = cheerio.load(htmlDetail);
-//                   let image = $Detail(".detail-content")
-//                     ?.find("img")
-//                     ?.attr("src");
-//                   if (!image) {
-//                     image = $Detail(".containe-777")?.find("img")?.attr("src");
-//                   }
-//                   let time = $Detail(".detail-time")
-//                     ?.text()
-//                     ?.trim()
-//                     ?.replaceAll("\n", "")
-//                     ?.replace(/\s+/g, " ");
-//                   if (time === "") {
-//                     time = $Detail(".time")?.text()?.trim()?.slice(0, 16);
-//                   }
-//                   let description = $Detail(".detail-sapo")?.text()?.trim();
-//                   if (description === "") {
-//                     description = $Detail(".list__rf-sapo")?.text()?.trim();
-//                   }
-//                   listPost.push({
-//                     title,
-//                     url: `${sourceUrl}${url}`,
-//                     image,
-//                     time,
-//                     description,
-//                   });
-//                   resolve();
-//                 }
-//               })
-//             );
-//           });
+          break;
+        default:
+          break;
+      }
+    } catch (error) {
+      // console.log("error: ");
+    }
+  };
 
-//           $(".box-focus-item-sm").each((index, element) => {
-//             promises.push(
-//               new Promise(async (resolve) => {
-//                 let title = $(element).find("a").text().trim();
-//                 let url = $(element).find("a").attr("href");
-//                 //   let image = $(element).find("img").attr("src");
-//                 if (
-//                   url.includes("en.baochinhphu.vn") ||
-//                   url.includes("cn.baochinhphu.vn") ||
-//                   url.includes("media.chinhphu.vn")
-//                 ) {
-//                   resolve();
-//                 } else {
-//                   const responseDetail = await axios.get(`${sourceUrl}${url}`);
-//                   const htmlDetail = responseDetail.data;
-//                   const $Detail = cheerio.load(htmlDetail);
-//                   let image = $Detail(".detail-content")
-//                     ?.find("img")
-//                     ?.attr("src");
-//                   if (!image) {
-//                     image = $Detail(".containe-777")?.find("img")?.attr("src");
-//                   }
-//                   let time = $Detail(".detail-time")
-//                     ?.text()
-//                     ?.trim()
-//                     ?.replaceAll("\n", "")
-//                     ?.replace(/\s+/g, " ");
-//                   if (time === "") {
-//                     time = $Detail(".time")?.text()?.trim()?.slice(0, 16);
-//                   }
-//                   let description = $Detail(".detail-sapo")?.text()?.trim();
-//                   if (description === "") {
-//                     description = $Detail(".list__rf-sapo")?.text()?.trim();
-//                   }
-//                   listPost.push({
-//                     title,
-//                     url: `${sourceUrl}${url}`,
-//                     image,
-//                     time,
-//                     description,
-//                   });
-//                   resolve();
-//                 }
-//               })
-//             );
-//           });
+  await getListPost("https://nguoiquansat.vn/bat-dong-san");
+  await getListPost("https://nguoiquansat.vn/tai-chinh-ngan-hang");
+  await getListPost("https://nguoiquansat.vn/cong-nghe");
 
-//           $(".box-item").each((index, element) => {
-//             promises.push(
-//               new Promise(async (resolve) => {
-//                 let title = $(element).find("a").text().trim();
-//                 let url = $(element).find("a").attr("href");
-//                 //   let image = $(element).find("img").attr("src");
-//                 if (
-//                   url.includes("en.baochinhphu.vn") ||
-//                   url.includes("cn.baochinhphu.vn") ||
-//                   url.includes("media.chinhphu.vn")
-//                 ) {
-//                   resolve();
-//                 } else {
-//                   const responseDetail = await axios.get(`${sourceUrl}${url}`);
-//                   const htmlDetail = responseDetail.data;
-//                   const $Detail = cheerio.load(htmlDetail);
-//                   let image = $Detail(".detail-content")
-//                     ?.find("img")
-//                     ?.attr("src");
-//                   if (!image) {
-//                     image = $Detail(".containe-777")?.find("img")?.attr("src");
-//                   }
-//                   let time = $Detail(".detail-time")
-//                     ?.text()
-//                     ?.trim()
-//                     ?.replaceAll("\n", "")
-//                     ?.replace(/\s+/g, " ");
-//                   if (time === "") {
-//                     time = $Detail(".time")?.text()?.trim()?.slice(0, 16);
-//                   }
-//                   let description = $Detail(".detail-sapo")?.text()?.trim();
-//                   if (description === "") {
-//                     description = $Detail(".list__rf-sapo")?.text()?.trim();
-//                   }
-//                   listPost.push({
-//                     title,
-//                     url: `${sourceUrl}${url}`,
-//                     image,
-//                     time,
-//                     description,
-//                   });
-//                   resolve();
-//                 }
-//               })
-//             );
-//           });
+  //remove duplicate posts base on title
+  let uniqueListPost = [];
+  let uniqueTitles = [];
+  listPost.forEach((post) => {
+    if (!uniqueTitles.includes(post.title)) {
+      uniqueListPost.push(post);
+      uniqueTitles.push(post.title);
+    }
+  });
+  console.log("Unique posts: ", uniqueListPost);
 
-//           $(".box-item-sub-link").each((index, element) => {
-//             promises.push(
-//               new Promise(async (resolve) => {
-//                 let title = $(element).find("a").text().trim();
-//                 let url = $(element).find("a").attr("href");
-//                 //   let image = $(element).find("img").attr("src");
-//                 if (
-//                   url.includes("en.baochinhphu.vn") ||
-//                   url.includes("cn.baochinhphu.vn") ||
-//                   url.includes("media.chinhphu.vn")
-//                 ) {
-//                   resolve();
-//                 } else {
-//                   const responseDetail = await axios.get(`${sourceUrl}${url}`);
-//                   const htmlDetail = responseDetail.data;
-//                   const $Detail = cheerio.load(htmlDetail);
-//                   let image = $Detail(".detail-content")
-//                     ?.find("img")
-//                     ?.attr("src");
-//                   if (!image) {
-//                     image = $Detail(".containe-777")?.find("img")?.attr("src");
-//                   }
-//                   let time = $Detail(".detail-time")
-//                     ?.text()
-//                     ?.trim()
-//                     ?.replaceAll("\n", "")
-//                     ?.replace(/\s+/g, " ");
-//                   if (time === "") {
-//                     time = $Detail(".time")?.text()?.trim()?.slice(0, 16);
-//                   }
-//                   let description = $Detail(".detail-sapo")?.text()?.trim();
-//                   if (description === "") {
-//                     description = $Detail(".list__rf-sapo")?.text()?.trim();
-//                   }
-//                   listPost.push({
-//                     title,
-//                     url: `${sourceUrl}${url}`,
-//                     image,
-//                     time,
-//                     description,
-//                   });
-//                   resolve();
-//                 }
-//               })
-//             );
-//           });
-//           break;
-//         case "https://chatluongvacuocsong.vn":
-//           $(".section-news-main").each((index, element) => {
-//             promises.push(
-//               new Promise(async (resolve) => {
-//                 let title = $(element).find(".card-title").text().trim();
-//                 let url = $(element).find(".card-title > a").attr("href");
-//                 let image = $(element).find("img").attr("src");
-//                 let time = $(element).find(".px-1").text().trim();
-//                 let description = $(element).find("p.fix-text3").text().trim();
-//                 listPost.push({
-//                   title,
-//                   url,
-//                   image,
-//                   time,
-//                   description,
-//                 });
-//                 resolve();
-//               })
-//             );
-//           });
-//           $(".mini-news_item").each((index, element) => {
-//             promises.push(
-//               new Promise(async (resolve) => {
-//                 let title = $(element).find(".font-weight-bold").text().trim();
-//                 let url = $(element).find(".font-weight-bold > a").attr("href");
-//                 //   let image = $(element).find("img").attr("src");
-//                 //   let time = $(element).find(".px-1").text().trim();
-//                 //   let description = $(element).find("p.fix-text3").text().trim();
-//                 if (!title || !url) {
-//                   resolve();
-//                 } else {
-//                   listPost.push({
-//                     title,
-//                     url,
-//                     image: null,
-//                     time: null,
-//                     description: null,
-//                   });
-//                   resolve();
-//                 }
-//               })
-//             );
-//           });
-//           $(".section-news-list > div > div").each((index, element) => {
-//             promises.push(
-//               new Promise(async (resolve) => {
-//                 let title = $(element).find("h2").text().trim();
-//                 let url = $(element).find("a").attr("href");
-//                 let image = $(element).find("img").attr("src");
-//                 // let time = $(element).find(".px-1").text().trim();
-//                 // let description = $(element).find("p.fix-text3").text().trim();
-//                 listPost.push({
-//                   title,
-//                   url,
-//                   image,
-//                   time: null,
-//                   description: null,
-//                 });
-//                 resolve();
-//               })
-//             );
-//           });
-//           break;
-//         case "https://dautu.kinhtechungkhoan.vn":
-//           $(".article-title").each((index, element) => {
-//             promises.push(
-//               new Promise(async (resolve) => {
-//                 let title = $(element).find(".article-title > a").text().trim();
-//                 let url = $(element).find("a").attr("href");
-//                 let image = $(element).find("img").attr("src");
-//                 // let time = $(element).find(".time").text().trim();
-//                 let description = $(element)
-//                   .find(".article-desc")
-//                   .text()
-//                   .trim();
-//                 if (!title || !url) {
-//                   resolve();
-//                 } else {
-//                   listPost.push({
-//                     title,
-//                     url,
-//                     image: image ? image : null,
-//                     time: null,
-//                     description: description ? description : null,
-//                   });
-//                   resolve();
-//                 }
-//               })
-//             );
-//           });
-//           $(".article").each((index, element) => {
-//             promises.push(
-//               new Promise(async (resolve) => {
-//                 let title = $(element).find(".article-title > a").text().trim();
-//                 let url = $(element).find("a").attr("href");
-//                 let image = $(element).find("img").attr("src");
-//                 // let time = $(element).find(".time").text().trim();
-//                 // let description = $(element).find(".article-desc").text().trim();
-//                 if (!title || !url) {
-//                   resolve();
-//                 } else {
-//                   listPost.push({
-//                     title,
-//                     url,
-//                     image: image ? image : null,
-//                     time: null,
-//                     description: null,
-//                   });
-//                   resolve();
-//                 }
-//               })
-//             );
-//           });
-//           break;
-//         case "https://doanhnghiepkinhdoanh.doanhnhanvn.vn":
-//           $(".position-relative").each((index, element) => {
-//             promises.push(
-//               new Promise(async (resolve) => {
-//                 let title = $(element).find("a.title-link").text().trim();
-//                 let url = $(element).find("a").attr("href");
-//                 let image = $(element).find("img").attr("src");
-//                 let time = $(element).find("small").text().trim();
-//                 let description = $(element).find(".sapo").text().trim();
-//                 listPost.push({
-//                   title,
-//                   url,
-//                   image,
-//                   time,
-//                   description,
-//                 });
-//                 resolve();
-//               })
-//             );
-//           });
-//           $(".news-lg").each((index, element) => {
-//             promises.push(
-//               new Promise(async (resolve) => {
-//                 let title = $(element).find(".text-secondary").text().trim();
-//                 let url = $(element).find("a").attr("href");
-//                 let image = $(element).find("img").attr("src");
-//                 let time = $(element).find("small").text().trim();
-//                 let description = $(element).find(".m-0").text().trim();
-//                 listPost.push({
-//                   title,
-//                   url,
-//                   image,
-//                   time,
-//                   description,
-//                 });
-//                 resolve();
-//               })
-//             );
-//           });
-//           $(".small-item").each((index, element) => {
-//             promises.push(
-//               new Promise(async (resolve) => {
-//                 let title = $(element).find("a.text-secondary").text().trim();
-//                 let url = $(element).find("a").attr("href");
-//                 let image = $(element).find("img").attr("src");
-//                 let time = $(element).find("small").text().trim();
-//                 //   let description = $(element).find(".sapo").text().trim();
-//                 listPost.push({
-//                   title,
-//                   url,
-//                   image,
-//                   time,
-//                   description: null,
-//                 });
-//                 resolve();
-//               })
-//             );
-//           });
-//           break;
-//         case "https://doanhnhanvn.vn":
-//           $(".story--highlight").each((index, element) => {
-//             promises.push(
-//               new Promise(async (resolve) => {
-//                 let title = $(element).find(".story__title > a").text().trim();
-//                 let url = $(element).find("a").attr("href");
-//                 let image = $(element).find("img").attr("src");
-//                 let time = $(element).find("time").text().trim();
-//                 // let description = $(element).find("p").text().trim();
-//                 listPost.push({
-//                   title,
-//                   url,
-//                   image,
-//                   time,
-//                   description: null,
-//                 });
-//                 resolve();
-//               })
-//             );
-//           });
-//           $(".story").each((index, element) => {
-//             promises.push(
-//               new Promise(async (resolve) => {
-//                 let title = $(element).find(".story__title > a").text().trim();
-//                 let url = $(element).find("a").attr("href");
-//                 let image = $(element).find("img").attr("src");
-//                 let time = $(element).find("time").text().trim();
-//                 // let description = $(element).find("p").text().trim();
-//                 listPost.push({
-//                   title,
-//                   url,
-//                   image,
-//                   time: time ? time : null,
-//                   description: null,
-//                 });
-//                 resolve();
-//               })
-//             );
-//           });
-//           break;
-//         default:
-//           break;
-//       }
-//     } catch (error) {
-//       console.log("error: ");
-//     }
+  //go to each url and get content
+  let promises = [];
+  uniqueListPost.forEach((post) => {
+    promises.push(
+      axios.get(post.url).then((response) => {
+        const html = response.data;
+        const $ = cheerio.load(html);
 
-//     // Wait for all promises to resolve
-//     //   Promise.all(promises).then(() => {
-//     //     console.log("listPost: ", listPost);
-//     //     console.log("listPost.length: ", listPost.length);
-//     //   });
-//   };
-//   await getListPost("https://baochinhphu.vn");
-//   await getListPost("https://chatluongvacuocsong.vn");
-//   await getListPost("https://dautu.kinhtechungkhoan.vn");
-//   await getListPost("https://doanhnghiepkinhdoanh.doanhnhanvn.vn");
-//   await getListPost("https://doanhnhanvn.vn");
+        let time = $(".block-sc-publish-time").text().trim();
+        let header = $(".sc-longform-header-sapo").text().trim();
+        let content = $("article").text().trim();
+        let followedBy = $(".js-source-copy").text().trim();
+        let sourceUrl = $("#url-copy").text().trim();
 
-//   console.log("All posts collected: ", listPost.length);
-//   //   console.log(listPost);
+        // Lấy toàn bộ HTML bên trong .entry-no-padding (kể cả div, p, table,...)
+        let entryHtml = $(".entry-no-padding").html();
 
-//   //remove duplicate posts base on title
-//   let uniqueListPost = [];
-//   let uniqueTitles = [];
-//   listPost.forEach((post) => {
-//     if (!uniqueTitles.includes(post.title)) {
-//       uniqueListPost.push(post);
-//       uniqueTitles.push(post.title);
-//     }
-//   });
-//   console.log("Unique posts: ", uniqueListPost.length);
+        // Nếu bạn muốn lấy HTML của từng thẻ con (children) rồi ghép lại:
+        // let entryHtml = $(".entry-no-padding").children().map((i, el) => {
+        //   return $.html(el);
+        // }).get().join("");
+        // Xoá tất cả thẻ div nằm trong .entry-no-padding (bao gồm cả nội dung bên trong)
+        let filteredHtml2 = $(".detail-content").html();
+        // Xoá các thẻ div là con trực tiếp của .entry-no-padding
+        $(".entry-no-padding > div").remove();
 
-//   let uniqueListPostMap = uniqueListPost.map((item) => {
-//     return [null, ...Object.values(item), moment().format("YYYY-MM-DD")];
-//   });
+        // Sau khi xoá, lấy lại toàn bộ HTML bên trong .entry-no-padding
+        let filteredHtml = $(".entry-no-padding").html();
 
-//   //delete old data
-//   await query("DELETE FROM news_all where date = ?", [
-//     moment().format("YYYY-MM-DD"),
-//   ]);
-//   //insert new data
-//   await query("INSERT INTO news_all VALUES ?", [uniqueListPostMap]);
-// }
+        post.filteredHtml =
+          filteredHtml?.trim()?.length > 100
+            ? filteredHtml?.trim()
+            : filteredHtml2?.trim();
+
+        post.time = time;
+        post.header = header;
+        // post.content = content;
+        post.followedBy = followedBy;
+        post.sourceUrl = sourceUrl;
+
+        // Lưu nội dung HTML vào post
+        // post.entryHtml = entryHtml;
+      })
+    );
+  });
+  await Promise.all(promises);
+  console.log("Posts with content: ", uniqueListPost);
+
+  let uniqueListPostMap = uniqueListPost.map((item) => {
+    return [null, ...Object.values(item), moment().format("YYYY-MM-DD")];
+  });
+  // console.log("uniqueListPostMap: ", uniqueListPostMap);
+
+  //delete old data
+  await query(
+    "DELETE FROM news_all_detail where (date = ? OR date = ? OR date = ?) ",
+    [
+      moment().format("YYYY-MM-DD"),
+      moment().subtract(1, "days").format("YYYY-MM-DD"),
+      moment().subtract(2, "days").format("YYYY-MM-DD"),
+    ]
+  );
+  // console.log("uniqueListPostMap: ", uniqueListPostMap);
+  //insert new data
+  await query(
+    "INSERT INTO news_all_detail (id, title, url, image, description, type, filteredHtml, time, header, followedBy, sourceUrl, date) VALUES ?",
+    [uniqueListPostMap]
+  );
+}
 
 async function getNewsAll() {
   let listPost = [];
@@ -2992,11 +2562,11 @@ async function getNewsAll() {
   //   "https://doanhnghiepkinhdoanh.doanhnhanvn.vn/khoi-nghiep-sang-tao.htm"
   // );
 
-  await getListPost("https://chatluongvacuocsong.vn/doanh-nghiep--doanh-nhan/");
-  await getListPost("https://chatluongvacuocsong.vn/van-hoa-doi-song/");
-  await getListPost("https://chatluongvacuocsong.vn/kinh-te/");
-  await getListPost("https://chatluongvacuocsong.vn/tai-chinh-ngan-hang/");
-  await getListPost("https://chatluongvacuocsong.vn/bat-dong-san/");
+  // await getListPost("https://chatluongvacuocsong.vn/doanh-nghiep--doanh-nhan/");
+  // await getListPost("https://chatluongvacuocsong.vn/van-hoa-doi-song/");
+  // await getListPost("https://chatluongvacuocsong.vn/kinh-te/");
+  // await getListPost("https://chatluongvacuocsong.vn/tai-chinh-ngan-hang/");
+  // await getListPost("https://chatluongvacuocsong.vn/bat-dong-san/");
   await getListPost("https://baochinhphu.vn/kinh-te/khoi-nghiep.htm");
   await getListPost("https://baochinhphu.vn/xa-hoi.htm");
   await getListPost("https://baochinhphu.vn/kinh-te/thi-truong.htm");
@@ -3488,120 +3058,132 @@ const getGiaXangDau = async () => {
 };
 
 const getIndexPointHOSE = async () => {
-  // Simulate API response
-  const apiResponse = await axios.get(
-    `https://mkw-socket-v2.vndirect.com.vn/mkwsocketv2/leaderlarger?index=VNINDEX`
-  ); // Your HTML response goes here
-  const response = apiResponse?.data?.data;
-  // Sắp xếp mảng theo giá trị tuyệt đối của point từ lớn đến nhỏ
-  // Tách mảng thành 2 phần: giá trị dương và giá trị âm
-  let positivePoints = response
-    ?.filter((item) => item.point > 0)
-    .sort((a, b) => b.point - a.point);
-  let negativePoints = response
-    ?.filter((item) => item.point < 0)
-    .sort((a, b) => a.point - b.point);
+  try {
+    // Simulate API response
+    const apiResponse = await axios.get(
+      `https://mkw-socket-v2.vndirect.com.vn/mkwsocketv2/leaderlarger?index=VNINDEX`
+    ); // Your HTML response goes here
+    const response = apiResponse?.data?.data;
+    // Sắp xếp mảng theo giá trị tuyệt đối của point từ lớn đến nhỏ
+    // Tách mảng thành 2 phần: giá trị dương và giá trị âm
+    let positivePoints = response
+      ?.filter((item) => item.point > 0)
+      .sort((a, b) => b.point - a.point);
+    let negativePoints = response
+      ?.filter((item) => item.point < 0)
+      .sort((a, b) => a.point - b.point);
 
-  // Lấy 10 giá trị dương lớn nhất và 10 giá trị âm bé nhất
-  let top10Positive = positivePoints?.slice(0, 10);
-  let top10Negative = negativePoints?.slice(0, 10);
+    // Lấy 10 giá trị dương lớn nhất và 10 giá trị âm bé nhất
+    let top10Positive = positivePoints?.slice(0, 10);
+    let top10Negative = negativePoints?.slice(0, 10);
 
-  // Kết hợp 2 mảng lại với nhau
-  let result = top10Positive?.concat(top10Negative);
+    // Kết hợp 2 mảng lại với nhau
+    let result = top10Positive?.concat(top10Negative);
 
-  let dataMap = result?.map((item) => {
-    return [...Object.values(item)];
-  });
+    let dataMap = result?.map((item) => {
+      return [...Object.values(item)];
+    });
 
-  if (dataMap?.length > 0) {
-    //delete old data
-    await query("DELETE FROM top20_hose");
-    //insert new data
-    await query("INSERT INTO top20_hose VALUES ?", [dataMap]);
-  } else {
-    //delete old data
-    await query("DELETE FROM top20_hose");
+    if (dataMap?.length > 0) {
+      //delete old data
+      await query("DELETE FROM top20_hose");
+      //insert new data
+      await query("INSERT INTO top20_hose VALUES ?", [dataMap]);
+    } else {
+      //delete old data
+      await query("DELETE FROM top20_hose");
+    }
+  } catch (error) {
+    console.log("error: ", error);
   }
 };
 
 const getIndexPointHNX = async () => {
-  // Simulate API response
-  const apiResponse = await axios.get(
-    `https://mkw-socket-v2.vndirect.com.vn/mkwsocketv2/leaderlarger?index=HNX`
-  ); // Your HTML response goes here
-  const response = apiResponse?.data?.data;
-  // Sắp xếp mảng theo giá trị tuyệt đối của point từ lớn đến nhỏ
-  // Tách mảng thành 2 phần: giá trị dương và giá trị âm
-  let positivePoints = response
-    ?.filter((item) => item.point > 0)
-    .sort((a, b) => b.point - a.point);
-  let negativePoints = response
-    ?.filter((item) => item.point < 0)
-    .sort((a, b) => a.point - b.point);
+  try {
+    // Simulate API response
+    const apiResponse = await axios.get(
+      `https://mkw-socket-v2.vndirect.com.vn/mkwsocketv2/leaderlarger?index=HNX`
+    ); // Your HTML response goes here
+    const response = apiResponse?.data?.data;
+    // Sắp xếp mảng theo giá trị tuyệt đối của point từ lớn đến nhỏ
+    // Tách mảng thành 2 phần: giá trị dương và giá trị âm
+    let positivePoints = response
+      ?.filter((item) => item.point > 0)
+      .sort((a, b) => b.point - a.point);
+    let negativePoints = response
+      ?.filter((item) => item.point < 0)
+      .sort((a, b) => a.point - b.point);
 
-  // Lấy 10 giá trị dương lớn nhất và 10 giá trị âm bé nhất
-  let top10Positive = positivePoints?.slice(0, 10);
-  let top10Negative = negativePoints?.slice(0, 10);
+    // Lấy 10 giá trị dương lớn nhất và 10 giá trị âm bé nhất
+    let top10Positive = positivePoints?.slice(0, 10);
+    let top10Negative = negativePoints?.slice(0, 10);
 
-  // Kết hợp 2 mảng lại với nhau
-  let result = top10Positive?.concat(top10Negative);
+    // Kết hợp 2 mảng lại với nhau
+    let result = top10Positive?.concat(top10Negative);
 
-  let dataMap = result?.map((item) => {
-    return [...Object.values(item)];
-  });
+    let dataMap = result?.map((item) => {
+      return [...Object.values(item)];
+    });
 
-  if (dataMap?.length > 0) {
-    //delete old data
-    await query("DELETE FROM top20_hnx");
-    //insert new data
-    await query("INSERT INTO top20_hnx VALUES ?", [dataMap]);
-  } else {
-    //delete old data
-    await query("DELETE FROM top20_hose");
+    if (dataMap?.length > 0) {
+      //delete old data
+      await query("DELETE FROM top20_hnx");
+      //insert new data
+      await query("INSERT INTO top20_hnx VALUES ?", [dataMap]);
+    } else {
+      //delete old data
+      await query("DELETE FROM top20_hose");
+    }
+  } catch (error) {
+    console.log("error: ", error);
   }
 };
 
 const getChangeCount = async () => {
-  // Simulate API response
-  const apiResponse = await axios.get(
-    `https://mkw-socket-v2.vndirect.com.vn/mkwsocketv2/gainerslosers?index=VNINDEX`
-  ); // Your HTML response goes here
-  const response = apiResponse?.data?.data;
-  let lastItem =
-    response?.length > 0
-      ? response[response.length - 1]
-      : {
-          index: "VNINDEX",
-          noChange: 0,
-          decline: 0,
-          advance: 0,
-          time: "09:10:10",
-        };
-  const apiResponseHNX = await axios.get(
-    `https://mkw-socket-v2.vndirect.com.vn/mkwsocketv2/gainerslosers?index=HNX`
-  ); // Your HTML response goes here
-  const responseHNX = apiResponseHNX?.data?.data;
-  let lastItemHNX =
-    responseHNX?.length > 0
-      ? responseHNX[responseHNX.length - 1]
-      : {
-          index: "HNX",
-          noChange: 0,
-          decline: 0,
-          advance: 0,
-          time: "09:10:10",
-        };
+  try {
+    // Simulate API response
+    const apiResponse = await axios.get(
+      `https://mkw-socket-v2.vndirect.com.vn/mkwsocketv2/gainerslosers?index=VNINDEX`
+    ); // Your HTML response goes here
+    const response = apiResponse?.data?.data;
+    let lastItem =
+      response?.length > 0
+        ? response[response.length - 1]
+        : {
+            index: "VNINDEX",
+            noChange: 0,
+            decline: 0,
+            advance: 0,
+            time: "09:10:10",
+          };
+    const apiResponseHNX = await axios.get(
+      `https://mkw-socket-v2.vndirect.com.vn/mkwsocketv2/gainerslosers?index=HNX`
+    ); // Your HTML response goes here
+    const responseHNX = apiResponseHNX?.data?.data;
+    let lastItemHNX =
+      responseHNX?.length > 0
+        ? responseHNX[responseHNX.length - 1]
+        : {
+            index: "HNX",
+            noChange: 0,
+            decline: 0,
+            advance: 0,
+            time: "09:10:10",
+          };
 
-  let result = [lastItem, lastItemHNX];
+    let result = [lastItem, lastItemHNX];
 
-  let dataMap = result.map((item) => {
-    return [...Object.values(item)];
-  });
-  console.log("get change count complete: ");
-  //delete old data
-  await query("DELETE FROM change_count");
-  //insert new data
-  await query("INSERT INTO change_count VALUES ?", [dataMap]);
+    let dataMap = result.map((item) => {
+      return [...Object.values(item)];
+    });
+    console.log("get change count complete ");
+    //delete old data
+    await query("DELETE FROM change_count");
+    //insert new data
+    await query("INSERT INTO change_count VALUES ?", [dataMap]);
+  } catch (error) {
+    console.log("error: ", error);
+  }
 };
 
 const getThanhKhoanHOSE = async () => {

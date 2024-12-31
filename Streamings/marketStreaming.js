@@ -18,7 +18,8 @@ function resolveURL(baseURL, endpoint) {
 }
 
 // Initialize WebSocket server
-const wss = new WebSocket.Server({ port: 8080 });
+const wss = new WebSocket.Server({ port: 8000 });
+// const wss = new WebSocket.Server({ port: 8080 });
 
 const clientInterests = new Map(); // Map to keep track of client's symbol interest
 
