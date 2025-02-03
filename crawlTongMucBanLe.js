@@ -1,7 +1,7 @@
 const XLSX = require("xlsx");
 const query = require("./common/query");
 
-const curMonth = `11`;
+const curMonth = `12`;
 const curYear = 2024;
 const fileExcelName = `${curYear}-${curMonth}.xlsx`;
 const listMonthMap = [
@@ -54,7 +54,7 @@ const crawlTongMucBanLe = async () => {
     jsonData.forEach((row, index) => {
       // console.log("row: ", row);
       let titleFound = listTitle?.find((item) => {
-        return item.includes(row[0]?.trim());
+        return item.includes(row[0]?.trim()) || item.includes(row[1]?.trim());
       });
       // Kiểm tra tiêu đề trong cột B (__EMPTY_1) hoặc cột C (__EMPTY_2) có trong listTitle không
       if (titleFound) {
@@ -76,7 +76,7 @@ const crawlTongMucBanLe = async () => {
 
   //insert new data
   await query(
-    "INSERT INTO tong_muc_ban_le_dich_vu (time, tong_ban_le_hh_va_dv, ban_le_dich_vu_luu_tru_an_uong, ban_le_hang_hoa, ban_le_du_lich_lu_hanh, ban_le_dich_vu_khac) VALUES (?)",
+    "INSERT INTO tong_muc_ban_le_dich_vu (time, tong_ban_le_hh_va_dv, ban_le_hang_hoa, ban_le_dich_vu_luu_tru_an_uong, ban_le_du_lich_lu_hanh, ban_le_dich_vu_khac) VALUES (?)",
     [
       [
         timeMonth,

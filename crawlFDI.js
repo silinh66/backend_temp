@@ -26,7 +26,7 @@ const getPrevMonthNumber = (curMonth) => {
   return curMonth - 1;
 };
 
-const curMonthNumber = 5;
+const curMonthNumber = 12;
 const curYear = 2024;
 const prevMonth = getPrevMonthString(curMonthNumber);
 const prevMonthNumber = getPrevMonthNumber(curMonthNumber);

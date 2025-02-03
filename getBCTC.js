@@ -6,7 +6,7 @@ const sleep = promisify(setTimeout);
 
 // Đường dẫn file JSON và thư mục lưu trữ
 const jsonFilePath = path.join(__dirname, "hsx_id_symbol.json");
-const baseDir = path.join(__dirname, "bctc_new");
+const baseDir = path.join(__dirname, "bctc");
 
 // Đọc file JSON và trả về danh sách mã chứng khoán
 async function getStockList() {

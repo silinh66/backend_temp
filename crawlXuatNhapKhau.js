@@ -26,7 +26,7 @@ const getPrevMonthNumber = (curMonth) => {
   return curMonth - 1;
 };
 
-const curMonthNumber = 11;
+const curMonthNumber = 12;
 const curYear = 2024;
 const prevMonth = getPrevMonthString(curMonthNumber);
 const prevMonthNumber = getPrevMonthNumber(curMonthNumber);
@@ -63,7 +63,7 @@ const crawlXuatKhau = async () => {
 
   // Tìm tất cả sheet có chứa chữ "CPI"
   const sheetNamesContainingCPI = workbook.SheetNames.filter((name) => {
-    return name.includes("XK");
+    return name.includes("XK tháng");
   });
 
   // Lưu trữ dữ liệu đọc được
@@ -122,7 +122,7 @@ const crawlNhapKhau = async () => {
 
   // Tìm tất cả sheet có chứa chữ "CPI"
   const sheetNamesContainingCPI = workbook.SheetNames.filter((name) => {
-    return name.includes("NK");
+    return name.includes("NK tháng");
   });
 
   // Lưu trữ dữ liệu đọc được

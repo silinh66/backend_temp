@@ -245,9 +245,7 @@ async function getNewsAllDetail() {
           $(".b-grid").each((index, element) => {
             let title = $(element).find(".b-grid__title").text().trim();
             let url = $(element).find("a").attr("href");
-            console.log("url: ", url);
             let image = $(element).find("img").attr("src");
-            console.log("image: ", image);
             let des1 = $(element).find(".b-grid__desc").text().trim();
             let des2 = $(element).find(".b-grid__row").text().trim();
             let object = {
@@ -265,9 +263,7 @@ async function getNewsAllDetail() {
           $(".b-grid").each((index, element) => {
             let title = $(element).find(".b-grid__title").text().trim();
             let url = $(element).find("a").attr("href");
-            console.log("url: ", url);
             let image = $(element).find("img").attr("src");
-            console.log("image: ", image);
             let des1 = $(element).find(".b-grid__desc").text().trim();
             let des2 = $(element).find(".b-grid__row").text().trim();
             let object = {
@@ -302,7 +298,6 @@ async function getNewsAllDetail() {
       uniqueTitles.push(post.title);
     }
   });
-  console.log("Unique posts: ", uniqueListPost);
 
   //go to each url and get content
   let promises = [];
@@ -350,7 +345,6 @@ async function getNewsAllDetail() {
     );
   });
   await Promise.all(promises);
-  console.log("Posts with content: ", uniqueListPost);
 
   let uniqueListPostMap = uniqueListPost.map((item) => {
     return [null, ...Object.values(item), moment().format("YYYY-MM-DD")];
@@ -3089,10 +3083,11 @@ const getIndexPointHOSE = async () => {
       await query("DELETE FROM top20_hose");
       //insert new data
       await query("INSERT INTO top20_hose VALUES ?", [dataMap]);
-    } else {
-      //delete old data
-      await query("DELETE FROM top20_hose");
-    }
+    } 
+    // else {
+    //   //delete old data
+    //   await query("DELETE FROM top20_hose");
+    // }
   } catch (error) {
     console.log("error: ", error);
   }
@@ -3130,10 +3125,11 @@ const getIndexPointHNX = async () => {
       await query("DELETE FROM top20_hnx");
       //insert new data
       await query("INSERT INTO top20_hnx VALUES ?", [dataMap]);
-    } else {
-      //delete old data
-      await query("DELETE FROM top20_hose");
-    }
+    } 
+    // else {
+    //   //delete old data
+    //   await query("DELETE FROM top20_hose");
+    // }
   } catch (error) {
     console.log("error: ", error);
   }

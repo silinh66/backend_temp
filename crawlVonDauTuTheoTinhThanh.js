@@ -1,7 +1,7 @@
 const XLSX = require("xlsx");
 const query = require("./common/query");
 
-for (let j = 11; j < 12; j++) {
+for (let j = 12; j < 13; j++) {
   const curMonth = j < 10 ? `0${j}` : j;
   const curYear = 2024;
   const fileExcelName = `${curYear}-${curMonth}.xlsx`;
@@ -136,6 +136,7 @@ for (let j = 11; j < 12; j++) {
     const sheetNamesContainingCPI = workbook.SheetNames.filter((name) => {
       return (
         (name.includes("VDT tu NSNN") ||
+          name.includes("VĐT NSNN") ||
           name.includes("VonDT") ||
           name.includes("VDT") ||
           name.includes("VĐT") ||
@@ -146,6 +147,7 @@ for (let j = 11; j < 12; j++) {
         !name.includes("VĐTTXH") &&
         !name.includes("VDT TTXH") &&
         !name.includes("VDT TTNSNN quy") &&
+        !name.includes("VĐT NSNN quy") &&
         !name.includes("VDT TXH") &&
         !name.includes("VĐT TXH") &&
         !name.includes("VonDTTXH")
@@ -171,16 +173,30 @@ for (let j = 11; j < 12; j++) {
             stt: index + 1,
             thanhPho: item[1],
             code: convertProvinceNameToUnsignCode(item[1]),
-            vonDauTu: j === 1 ? item[3] : item[4],
+            vonDauTu: j === 1 || j === 12 ? item[3] : item[4],
             time: `${curYear}_${curMonth}`,
           };
         });
       let dataFinal = jsonDataMap.map((item) => {
         return [...Object.values(item)];
       });
+      console.log("dataFinal: ", dataFinal);
+      if (!dataFinal.length) {
+        // no rows, skip or handle differently
+        console.log("No rows to insert");
+        return;
+      }
+
+      //delete old data
+      await query(
+        `DELETE FROM von_dau_tu WHERE time = '${curYear}_${curMonth}'`
+      );
 
       //insert new data
-      await query("INSERT INTO von_dau_tu  VALUES ?", [dataFinal]);
+      await query(
+        "INSERT INTO von_dau_tu (stt, thanhPho, code, vonDauTu, time) VALUES ?",
+        [dataFinal]
+      );
 
       //done
       console.log("Done");

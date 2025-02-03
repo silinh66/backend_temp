@@ -1,7 +1,7 @@
 const XLSX = require("xlsx");
 const query = require("./common/query");
 
-for (let j = 11; j < 12; j++) {
+for (let j = 12; j < 13; j++) {
   const curMonth = j < 10 ? `0${j}` : j;
   const curYear = 2024;
   const fileExcelName = `${curYear}-${curMonth}.xlsx`;
@@ -68,9 +68,7 @@ for (let j = 11; j < 12; j++) {
       jsonData.forEach((row, index) => {
         let titleFound = listTitle?.find(
           (item) =>
-            item.includes(row[0]?.trim()) ||
-            item.includes(row[1]?.trim()) ||
-            item.includes(row[2]?.trim())
+            item.includes(row[0]?.trim()) || item.includes(row[1]?.trim())
         );
         // Kiểm tra tiêu đề trong cột B (__EMPTY_1) hoặc cột C (__EMPTY_2) có trong listTitle không
         if (titleFound) {
@@ -81,7 +79,7 @@ for (let j = 11; j < 12; j++) {
             data_1: row[4],
             data_2: row[5],
             data_3: row[6],
-            CPI: row[7],
+            CPI: j === 12 ? row[6] : row[7],
           });
         }
       });

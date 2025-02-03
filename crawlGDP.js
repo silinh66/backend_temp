@@ -26,7 +26,7 @@ const getPrevMonthNumber = (curMonth) => {
   return curMonth - 1;
 };
 
-const curMonthNumber = 11;
+const curMonthNumber = 12;
 const curYear = 2024;
 const prevMonth = getPrevMonthString(curMonthNumber);
 const prevMonthNumber = getPrevMonthNumber(curMonthNumber);
@@ -133,8 +133,8 @@ const crawlGDPHienHanh = async () => {
         // Thêm dữ liệu vào mảng data
         data.push({
           title: titleFound,
-          quy_truoc: row[2],
-          quy_nay: row[2],
+          quy_truoc: row[3],
+          quy_nay: row[3],
         });
       }
     });
@@ -284,7 +284,7 @@ const crawlGDPThuc = async () => {
 
   // Tìm tất cả sheet có chứa chữ "CPI"
   const sheetNamesContainingCPI = workbook.SheetNames.filter((name) => {
-    return name.includes("GDP-SS");
+    return name.includes("GDP SS") || name.includes("GDP-SS");
   });
 
   // Lưu trữ dữ liệu đọc được
@@ -328,7 +328,7 @@ const crawlGDPThuc = async () => {
         // Thêm dữ liệu vào mảng data
         data.push({
           title: titleFound,
-          quy_truoc: row[2],
+          quy_truoc: row[3],
           quy_nay: row[3],
         });
       }

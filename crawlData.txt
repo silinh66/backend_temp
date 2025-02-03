@@ -1,0 +1,37 @@
+Tổng cục thống kê: https://www.gso.gov.vn
++ GDP
+	- Chạy file crawlGDP.js, có 2 hàm crawlGDPHienHanh và crawlGDPThuc, sửa curMonthNumber và curYear là được, xong chạy lần lượt từng hàm. Chú ý xem cột chứa dữ liệu là cột 2 hay 3 thì sửa lai
+	  quy_truoc: row[3],
+          quy_nay: row[3] tương ứng
+	
++ VĐT NSNN
++ Tổng mức bán lẻ
+	- Chạy file crawlTongMucBanLe.js, sửa curMonth và curYear
++ Xuất nhập khẩu
+	- Chạy file crawlXuatNhapKhau, sửa curMonthNumber và curYear, có 2 hàm thì chạy hàm crawlXuatKhau trước rồi mới chạy crawlNhapKhau
++ Vốn đầu tư theo tỉnh thành
+	- Chạy file crawlVonDauTuTheoTinhThanh, sửa j là tháng và curYear là năm
++ CPI
+	- Chạy file crawlCPI.js, sửa j là tháng và curYear là năm
+https://www.mpi.gov.vn/portal/pages/solieudtnn.aspx?nam=2024&thang=5
++ FDI: 
+
+https://tradingeconomics.com/vietnam/industrial-production
++ IIP
+
+https://tradingeconomics.com/vietnam/manufacturing-pmi
++ PMI
+
+Tin tức và sự kiện: testNews.js ( chạy hàng ngày)
+  FDI: https://www.mpi.gov.vn/portal/pages/solieudtnn.aspx?nam=2024&thang=5
+  https://www.mpi.gov.vn/portal/Pages/2024-5-27/Tinh-hinh-thu-hut-dau-tu-nuoc-ngoai-tai-Viet-Nam-vqnaul1.aspx
+  Xuất nhập khẩu: crawlXuatNhapKhau.js
+  Tổng mức bán lẻ: crawlTongMucBanLe.js
+  Đầu tư ngân sách nhà nước: crawlDauTuNganSachNhaNuoc.js
+  GDP: crawlGDP.js
+  PMI: https://tradingeconomics.com/vietnam/manufacturing-pmi
+  IIP: https://tradingeconomics.com/vietnam/industrial-production
+  Tab tài chính màn phân tích: getThongKeGiaoDich.js (chạy hàng ngày)
+  Data báo cáo tài chính: getFinancialRatio.js (chạy hàng tháng/quý) - ngày 28 hàng tháng
+  Data báo cáo phân tích: getBaoCaoPhanTich.js (chạy hàng tuần)
+

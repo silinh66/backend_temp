@@ -4913,9 +4913,6 @@ app.get("/news-type", async (req, res) => {
   });
 });
 
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
-});
 const getNewsDetail = async (url) => {
   // Fetch the HTML first and load it into Cheerio
   const response = await axios.get(url);
