@@ -9,6 +9,9 @@ const socketIo = require("socket.io");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const http = require("http");
+const https = require("https");
+
+const httpsAgent = new https.Agent({ family: 4 });
 const cheerio = require("cheerio");
 const { isProduct } = require("./constants/isProduct");
 const fetch = require("node-fetch");
@@ -838,7 +841,7 @@ app.get("/top20/:type", async function (req, res) {
   const now = new Date();
   const hours = now.getHours();
   const minutes = now.getMinutes();
-  if (hours < 9) {
+  if (hours < 9 && hours > 8) {
     data = data?.map((item, index) => {
       return {
         symbol: "",
@@ -4148,12 +4151,14 @@ app.get("/mua_ban_chu_dong_short", async function (req, res) {
   // let latestDate = await getLatestDate();
   try {
     let data = await axios.get(
-      `https://api.finpath.vn/api/stocks/v2/trades/${symbol}?page=1&pageSize=3000`
+      `https://api.finpath.vn/api/stocks/v2/trades/${symbol}?page=1&pageSize=3000`,
+      { httpsAgent }
     );
     let dataResponse = data?.data?.data?.trades;
 
     let dataBidAsk = await axios.get(
-      `https://api.finpath.vn/api/stocks/orderbook/${symbol}`
+      `https://api.finpath.vn/api/stocks/orderbook/${symbol}`,
+      { httpsAgent }
     );
     let dataBidAskResponse = dataBidAsk?.data?.data?.orderbook;
     let dataResponseMap = dataResponse?.map((item, index) => {
@@ -4874,7 +4879,8 @@ app.get("/news-type", async (req, res) => {
   const page = parseInt(req.query.page, 10) || 1; // Mặc định là trang số 1
   let tableName = "news_all";
   console.log("type: ", type);
-  if (type === "Bất động sản" || type === "Tài chính" || type === "Công nghệ") tableName = "news_all_detail";
+  if (type === "Bất động sản" || type === "Tài chính" || type === "Công nghệ")
+    tableName = "news_all_detail";
   if (!type) {
     res.status(400).send("Type parameter is required");
     return;
@@ -5868,7 +5874,8 @@ app.get("/get-config-filter", authenticateToken, async (req, res) => {
   const userId = req.user.userId;
   try {
     const filters = await axios.get(
-      "https://api.finpath.vn/api/signals?type=&group=&topMarketCap=&valueAvg5Session=&exchange=&watchlistIds=&pageSize=23&page=1&loadPoint=false&mode=custom&q=&sector="
+      "https://api.finpath.vn/api/signals?type=&group=&topMarketCap=&valueAvg5Session=&exchange=&watchlistIds=&pageSize=23&page=1&loadPoint=false&mode=custom&q=&sector=",
+      { httpsAgent }
     );
     let data = filters?.data?.data?.signals;
 
