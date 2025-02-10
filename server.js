@@ -2286,6 +2286,89 @@ app.get("/conversations", authenticateToken, async (req, res) => {
     conversations: { groups: groupConversations, direct: directConversations },
   });
 });
+app.post("/startDirectChat", authenticateToken, async (req, res) => {
+  try {
+    const { receiver_id } = req.body;
+    const sender_id = req.user.userId; // Giả sử middleware authenticateToken đã gán req.user
+
+    if (!receiver_id) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Receiver ID is required" 
+      });
+    }
+
+    // Ví dụ: Lấy thông tin người nhận từ cơ sở dữ liệu
+    const userQuery = await query(
+      "SELECT userID AS userID, name, image AS avatar FROM users WHERE userID = ?",
+      [receiver_id]
+    );
+    
+    
+    
+
+    if (!userQuery || userQuery.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Receiver not found" 
+      });
+    }
+    const receiver = userQuery[0];
+
+    // Kiểm tra xem đã có cuộc trò chuyện nào chưa (ví dụ: lấy tin nhắn cuối cùng)
+    const existingChat = await query(
+      `SELECT * FROM messages 
+       WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) 
+         AND group_id IS NULL 
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [sender_id, receiver_id, receiver_id, sender_id]
+    );
+
+    let conversationData;
+    if (existingChat && existingChat.length > 0) {
+      conversationData = {
+        conversation_id: `${sender_id}_${receiver_id}`,
+        userID: receiver.userID,
+        name: receiver.name,
+        avatar: receiver.avatar,
+        last_message_time: existingChat[0].created_at,
+        last_message_content: existingChat[0].content,
+        is_viewed: existingChat[0].is_viewed,
+      };
+
+      return res.json({
+        success: true,
+        message: "Conversation already exists",
+        conversation: conversationData,
+      });
+    } else {
+      conversationData = {
+        conversation_id: `${sender_id}_${receiver_id}`,
+        userID: receiver.userID,
+        name: receiver.name,
+        avatar: receiver.avatar,
+        last_message_time: null,
+        last_message_content: "",
+        is_viewed: 1,
+      };
+
+      return res.json({
+        success: true,
+        message: "Conversation started but no messages yet",
+        conversation: conversationData,
+      });
+    }
+  } catch (error) {
+    console.error("Error starting conversation:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error starting conversation",
+      error: error.message,
+    });
+  }
+});
+
 
 app.post("/messages/:message_id/view", authenticateToken, async (req, res) => {
   const userId = req.user.userId;
