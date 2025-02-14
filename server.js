@@ -2,6 +2,7 @@ var express = require("express");
 var app = express();
 var bodyParser = require("body-parser");
 var cors = require("cors");
+const nodemailer = require("nodemailer");
 var cron = require("node-cron");
 const WebSocket = require("ws");
 const TelegramBot = require("node-telegram-bot-api");
@@ -238,7 +239,9 @@ const authenticateToken = (req, res, next) => {
     next();
   });
 };
-
+const emailConfig = "dautubenvung.vn@gmail.com";
+// const emailDocument = 'dautubenvung.academy@hotmail.com'
+const passwordConfig = "glcl vfls bzhw xxbm";
 app.get("/", function (req, res) {
   return res.send({ error: false, message: "hello from Đầu Tư Bền Vững" });
 });
@@ -248,7 +251,65 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, "0.0.0.0", function () {
   console.log("Node app is running on port 5000");
 });
+app.post("/send-code-email", (req, res) => {
+  const { email } = req.body;
+  let passcode = randomize("0", 6);
+  if (email) {
+    // Gửi email
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: emailConfig,
+        pass: passwordConfig,
+      },
+    });
+    const mailOptions = {
+      from: `Đầu Tư Bền Vững ${emailConfig}`,
+      to: email,
+      subject: "Không chia sẻ mã này cho bất kỳ ai!",
+      text: `Mã của bạn là: ${passcode}`,
+    };
 
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log(error);
+        res.status(500).json({ message: "Failed to send passcode via email" });
+      } else {
+        console.log("Email sent: " + info.response);
+        res
+          .status(200)
+          .json({ message: "Passcode sent successfully", passcode });
+      }
+    });
+  } else {
+    res.status(400).json({ message: "No contact info provided" });
+  }
+});
+
+app.post("/change-password-contact", async (req, res) => {
+  const { contact, password } = req.body;
+  const password_hash = await bcrypt.hash(password, 10);
+
+  let response;
+  if (validateEmail(contact)) {
+    response = await query("UPDATE users SET password = ? WHERE email = ?", [
+      password_hash,
+      contact,
+    ]);
+  } else if (validatePhoneNumber(contact)) {
+    response = await query(
+      "UPDATE users SET password = ? WHERE phone_number = ?",
+      [password_hash, contact]
+    );
+  } else {
+    return res.status(400).send("Invalid contact information");
+  }
+
+  if (!response) {
+    return res.status(500).send("Failed to update password");
+  }
+  return res.status(200).json({ message: "Đổi pass thành công!" });
+});
 app.get("/bctc/:symbol/:filename", function (req, res) {
   const symbol = req.params.symbol;
   const filename = req.params.filename;
@@ -4874,7 +4935,8 @@ app.get("/news-type", async (req, res) => {
   const page = parseInt(req.query.page, 10) || 1; // Mặc định là trang số 1
   let tableName = "news_all";
   console.log("type: ", type);
-  if (type === "Bất động sản" || type === "Tài chính" || type === "Công nghệ") tableName = "news_all_detail";
+  if (type === "Bất động sản" || type === "Tài chính" || type === "Công nghệ")
+    tableName = "news_all_detail";
   if (!type) {
     res.status(400).send("Type parameter is required");
     return;
@@ -5234,12 +5296,12 @@ app.get("/reports", async function (req, res) {
 app.post("/filter-data", async function (req, res) {
   let object = req.body;
   let dataResponse = await axios.post(
-    "https://dautubenvung-721299848503.us-central1.run.app/filter-data",
-    // "https://fwtapi1.fialda.com/api/services/app/Stock/GetDataByFilter",
+    // "https://dautubenvung-721299848503.us-central1.run.app/filter-data",
+    "https://fwtapi1.fialda.com/api/services/app/Stock/GetDataByFilter",
     object
   );
-  // let data = dataResponse?.data;
-  let data = dataResponse?.data?.data;
+  let data = dataResponse?.data;
+  // let data = dataResponse?.data?.data;
   res.send({ error: false, data: data, message: "filter list." });
 });
 
