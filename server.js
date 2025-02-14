@@ -10,6 +10,9 @@ const socketIo = require("socket.io");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const http = require("http");
+const https = require("https");
+
+const httpsAgent = new https.Agent({ family: 4 });
 const cheerio = require("cheerio");
 const { isProduct } = require("./constants/isProduct");
 const fetch = require("node-fetch");
@@ -899,7 +902,7 @@ app.get("/top20/:type", async function (req, res) {
   const now = new Date();
   const hours = now.getHours();
   const minutes = now.getMinutes();
-  if (hours < 9) {
+  if (hours < 9 && hours > 8) {
     data = data?.map((item, index) => {
       return {
         symbol: "",
@@ -2344,6 +2347,89 @@ app.get("/conversations", authenticateToken, async (req, res) => {
     conversations: { groups: groupConversations, direct: directConversations },
   });
 });
+app.post("/startDirectChat", authenticateToken, async (req, res) => {
+  try {
+    const { receiver_id } = req.body;
+    const sender_id = req.user.userId; // Giả sử middleware authenticateToken đã gán req.user
+
+    if (!receiver_id) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Receiver ID is required" 
+      });
+    }
+
+    // Ví dụ: Lấy thông tin người nhận từ cơ sở dữ liệu
+    const userQuery = await query(
+      "SELECT userID AS userID, name, image AS avatar FROM users WHERE userID = ?",
+      [receiver_id]
+    );
+    
+    
+    
+
+    if (!userQuery || userQuery.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Receiver not found" 
+      });
+    }
+    const receiver = userQuery[0];
+
+    // Kiểm tra xem đã có cuộc trò chuyện nào chưa (ví dụ: lấy tin nhắn cuối cùng)
+    const existingChat = await query(
+      `SELECT * FROM messages 
+       WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) 
+         AND group_id IS NULL 
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [sender_id, receiver_id, receiver_id, sender_id]
+    );
+
+    let conversationData;
+    if (existingChat && existingChat.length > 0) {
+      conversationData = {
+        conversation_id: `${sender_id}_${receiver_id}`,
+        userID: receiver.userID,
+        name: receiver.name,
+        avatar: receiver.avatar,
+        last_message_time: existingChat[0].created_at,
+        last_message_content: existingChat[0].content,
+        is_viewed: existingChat[0].is_viewed,
+      };
+
+      return res.json({
+        success: true,
+        message: "Conversation already exists",
+        conversation: conversationData,
+      });
+    } else {
+      conversationData = {
+        conversation_id: `${sender_id}_${receiver_id}`,
+        userID: receiver.userID,
+        name: receiver.name,
+        avatar: receiver.avatar,
+        last_message_time: null,
+        last_message_content: "",
+        is_viewed: 1,
+      };
+
+      return res.json({
+        success: true,
+        message: "Conversation started but no messages yet",
+        conversation: conversationData,
+      });
+    }
+  } catch (error) {
+    console.error("Error starting conversation:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error starting conversation",
+      error: error.message,
+    });
+  }
+});
+
 
 app.post("/messages/:message_id/view", authenticateToken, async (req, res) => {
   const userId = req.user.userId;
@@ -4209,12 +4295,14 @@ app.get("/mua_ban_chu_dong_short", async function (req, res) {
   // let latestDate = await getLatestDate();
   try {
     let data = await axios.get(
-      `https://api.finpath.vn/api/stocks/v2/trades/${symbol}?page=1&pageSize=3000`
+      `https://api.finpath.vn/api/stocks/v2/trades/${symbol}?page=1&pageSize=3000`,
+      { httpsAgent }
     );
     let dataResponse = data?.data?.data?.trades;
 
     let dataBidAsk = await axios.get(
-      `https://api.finpath.vn/api/stocks/orderbook/${symbol}`
+      `https://api.finpath.vn/api/stocks/orderbook/${symbol}`,
+      { httpsAgent }
     );
     let dataBidAskResponse = dataBidAsk?.data?.data?.orderbook;
     let dataResponseMap = dataResponse?.map((item, index) => {
@@ -5930,7 +6018,8 @@ app.get("/get-config-filter", authenticateToken, async (req, res) => {
   const userId = req.user.userId;
   try {
     const filters = await axios.get(
-      "https://api.finpath.vn/api/signals?type=&group=&topMarketCap=&valueAvg5Session=&exchange=&watchlistIds=&pageSize=23&page=1&loadPoint=false&mode=custom&q=&sector="
+      "https://api.finpath.vn/api/signals?type=&group=&topMarketCap=&valueAvg5Session=&exchange=&watchlistIds=&pageSize=23&page=1&loadPoint=false&mode=custom&q=&sector=",
+      { httpsAgent }
     );
     let data = filters?.data?.data?.signals;
 
