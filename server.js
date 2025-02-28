@@ -1307,7 +1307,7 @@ app.get("/getUserInfo", authenticateToken, async (req, res) => {
 
   try {
     let userResult = await query(
-      "SELECT userID, email, phone_number, name, createdOn, image as avatar, isOnline, birthdate, tiktok_url , facebook_url , youtube_url  FROM users WHERE userID = ?",
+      "SELECT userID, email, phone_number, name, createdOn, image as avatar, isOnline, birthdate FROM users WHERE userID = ?",
       [userId]
     );
     if (userResult.length === 0) {
@@ -1330,7 +1330,7 @@ app.get("/getUserInfo", authenticateToken, async (req, res) => {
 
 app.put("/update-user", authenticateToken, async (req, res) => {
   const userId = req.user.userId;
-  const { image, birthdate, tiktok_url, facebook_url, youtube_url } = req.body;
+  const { image, birthdate } = req.body;
 
   // Validate birthdate
   const validDate = moment(birthdate, "YYYY-MM-DD", true).isValid(); // Strict parsing to ensure format
@@ -1347,13 +1347,14 @@ app.put("/update-user", authenticateToken, async (req, res) => {
     }
 
     // Proceed with update if date is valid
-    await query(
-      `UPDATE users SET image = ?, birthdate = ?, tiktok_url = ?, facebook_url = ?, youtube_url = ? WHERE userID = ?`,
-      [image, birthdate, tiktok_url, facebook_url, youtube_url, userId]
-    );
+    await query(`UPDATE users SET image = ?, birthdate = ? WHERE userID = ?`, [
+      image,
+      birthdate,
+      userId,
+    ]);
 
     const updatedUserResult = await query(
-      "SELECT userID, email, phone_number, name, createdOn, image, birthdate, tiktok_url, facebook_url, youtube_url, isOnline FROM users WHERE userID = ?",
+      "SELECT userID, email, phone_number, name, createdOn, image, birthdate, isOnline FROM users WHERE userID = ?",
       [userId]
     );
 
@@ -1398,17 +1399,24 @@ app.get("/getUserDetail/:userId", authenticateToken, async (req, res) => {
     // Initialize status as 'not' by default
     let status = "not";
 
+    let selectAll;
+    console.log("currentUserId: ", currentUserId);
+    console.log("targetUserId: ", targetUserId);
     if (currentUserId) {
+      selectAll = await query(
+        "SELECT * FROM friendships WHERE (user1_id = ? AND user2_id = ?) OR (user2_id = ? AND user1_id = ?)",
+        [+currentUserId, +targetUserId, +currentUserId, +targetUserId]
+      );
       // Check if there is a friendship record where currentUserId sent a request to targetUserId
       let sentRequest = await query(
         "SELECT status FROM friendships WHERE user1_id = ? AND user2_id = ?",
-        [currentUserId, targetUserId]
+        [+currentUserId, +targetUserId]
       );
 
       // Check if there is a friendship record where targetUserId sent a request to currentUserId
       let receivedRequest = await query(
         "SELECT status FROM friendships WHERE user1_id = ? AND user2_id = ?",
-        [targetUserId, currentUserId]
+        [+targetUserId, +currentUserId]
       );
 
       if (sentRequest.length > 0) {
@@ -1428,7 +1436,9 @@ app.get("/getUserDetail/:userId", authenticateToken, async (req, res) => {
 
     // Add the status to the userInfo
     userInfo.status = status;
-
+    if (selectAll.length > 0) userInfo.sender_id = selectAll[0].user1_id;
+    console.log("selectAll: ", selectAll);
+    console.log("userInfo: ", userInfo);
     res.send(userInfo);
   } catch (error) {
     console.error("Error fetching user details:", error);
@@ -1444,6 +1454,16 @@ app.post("/addFriend", authenticateToken, async (req, res) => {
       "INSERT INTO friendships (user1_id, user2_id, status, action_user_id) VALUES (?, ?, 'requested', ?)",
       [userId, friendId, userId]
     );
+
+    // Gửi thông báo qua socket đến người nhận nếu online
+    const receiverSocketId = userSocketMap[friendId];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("friendNotification", {
+        senderId: userId,
+        message: "Bạn có lời mời kết bạn mới.",
+      });
+    }
+
     res.json({ success: true, message: "Friend request sent" });
   } catch (error) {
     res.status(500).json({
@@ -1454,7 +1474,7 @@ app.post("/addFriend", authenticateToken, async (req, res) => {
   }
 });
 
-// Accept Friend Request
+// Accept Friend Request - chấp nhận lời mời và gửi thông báo về cho người gửi lời mời
 app.post("/acceptFriend", authenticateToken, async (req, res) => {
   const friendId = req.body.friendId;
   const userId = req.user.userId; // Extracted from JWT
@@ -1469,6 +1489,17 @@ app.post("/acceptFriend", authenticateToken, async (req, res) => {
       "INSERT INTO user_followers (follower_id, following_id) VALUES (?, ?), (?, ?)",
       [userId, friendId, friendId, userId]
     );
+
+    // Gửi thông báo qua socket cho người gửi lời mời nếu online
+    const senderSocketId = userSocketMap[friendId];
+    if (senderSocketId) {
+      io.to(senderSocketId).emit("friendResponseNotification", {
+        senderId: userId,
+        response: "accepted",
+        message: "Lời mời kết bạn của bạn đã được chấp nhận.",
+      });
+    }
+
     res.json({ success: true, message: "Friend request accepted" });
   } catch (error) {
     res.status(500).json({
@@ -1479,15 +1510,26 @@ app.post("/acceptFriend", authenticateToken, async (req, res) => {
   }
 });
 
-// Reject Friend Request
+// Reject Friend Request - từ chối lời mời và gửi thông báo về cho người gửi lời mời
 app.post("/rejectFriend", authenticateToken, async (req, res) => {
   const friendId = req.body.friendId;
   const userId = req.user.userId; // Extracted from JWT
   try {
     await query(
-      "DELETE FROM friendships WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?) AND status = 'requested'",
+      "DELETE FROM friendships WHERE ((user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)) AND status = 'requested'",
       [userId, friendId, friendId, userId]
     );
+
+    // Gửi thông báo qua socket cho người gửi lời mời nếu online
+    const senderSocketId = userSocketMap[friendId];
+    if (senderSocketId) {
+      io.to(senderSocketId).emit("friendResponseNotification", {
+        senderId: userId,
+        response: "rejected",
+        message: "Lời mời kết bạn của bạn đã bị từ chối.",
+      });
+    }
+
     res.json({ success: true, message: "Friend request rejected" });
   } catch (error) {
     res.status(500).json({
@@ -2353,9 +2395,9 @@ app.post("/startDirectChat", authenticateToken, async (req, res) => {
     const sender_id = req.user.userId; // Giả sử middleware authenticateToken đã gán req.user
 
     if (!receiver_id) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Receiver ID is required" 
+      return res.status(400).json({
+        success: false,
+        message: "Receiver ID is required",
       });
     }
 
@@ -2364,14 +2406,11 @@ app.post("/startDirectChat", authenticateToken, async (req, res) => {
       "SELECT userID AS userID, name, image AS avatar FROM users WHERE userID = ?",
       [receiver_id]
     );
-    
-    
-    
 
     if (!userQuery || userQuery.length === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Receiver not found" 
+      return res.status(404).json({
+        success: false,
+        message: "Receiver not found",
       });
     }
     const receiver = userQuery[0];
@@ -2429,7 +2468,6 @@ app.post("/startDirectChat", authenticateToken, async (req, res) => {
     });
   }
 });
-
 
 app.post("/messages/:message_id/view", authenticateToken, async (req, res) => {
   const userId = req.user.userId;
@@ -2874,7 +2912,15 @@ app.get("/messages/:conversationId", authenticateToken, async (req, res) => {
 
   res.json({ success: true, messages });
 });
-
+app.post("/allUser", async (req, res) => {
+  const searchUser = req.body.searchUser;
+  console.log("searchUser: ", searchUser);
+  const users = await query("SELECT * FROM users WHERE name LIKE ?", [
+    `%${searchUser}%`,
+  ]);
+  // const users = await query("SELECT * FROM users");
+  res.json(users);
+});
 const userSocketMap = {};
 
 // Hàm lấy danh sách groupId mà một userId là thành viên
@@ -3017,6 +3063,33 @@ io.on("connection", async (socket) => {
       }
     } catch (error) {
       console.error("Error sending message:", error);
+    }
+  });
+  socket.on("sendFriendNotification", (data) => {
+    const { senderId, receiverId } = data;
+    const receiverSocketId = userSocketMap[receiverId];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("friendNotification", {
+        senderId,
+        message: "Bạn có lời mời kết bạn mới.",
+      });
+    }
+  });
+
+  socket.on("sendFriendResponseNotification", (data) => {
+    console.log("data2: ", data);
+    const { senderId, receiverId, response } = data;
+    const receiverSocketId = userSocketMap[receiverId];
+    if (receiverSocketId) {
+      const message =
+        response === "accepted"
+          ? "Lời mời kết bạn của bạn đã được chấp nhận."
+          : "Lời mời kết bạn của bạn đã bị từ chối.";
+      io.to(receiverSocketId).emit("friendResponseNotification", {
+        senderId,
+        response,
+        message,
+      });
     }
   });
 
