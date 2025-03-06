@@ -620,14 +620,52 @@ app.get("/financial-reports/:symbol", async (req, res) => {
 });
 
 app.post("/createTopic", authenticateToken, async (req, res) => {
-  let { title, image, symbol_name, description, userId } = req.body;
+  let { title, image, symbol_name, description, userId, recommendation, price } = req.body;
+
   if (!title || !symbol_name || !description || !userId) {
-    return res
-      .status(400)
-      .send({ error: true, message: "Please provide all required fields" });
+    return res.status(400).send({ error: true, message: "Please provide all required fields" });
   }
+
+  // Chỉ chấp nhận các giá trị hợp lệ cho recommendation
+  const validRecommendations = ["BUY", "SELL", null, undefined];
+  if (!validRecommendations.includes(recommendation)) {
+    return res.status(400).send({ error: true, message: "Invalid recommendation value" });
+  }
+
+  // Lấy bài đăng gần nhất của user với symbol_name này
+  const existingPosts = await query(
+    "SELECT recommendation, price FROM topics WHERE symbol_name = ? AND userId = ? ORDER BY created_at DESC LIMIT 1",
+    [symbol_name, userId]
+  );
+
+  let lastRecommendation = existingPosts.length > 0 ? existingPosts[0].recommendation : null;
+  let lastPrice = existingPosts.length > 0 ? parseFloat(existingPosts[0].price) : null;
+
+  // Kiểm tra logic đăng bài
+  if (!lastRecommendation) {
+    if (recommendation !== "BUY" && recommendation !== null) {
+      return res.status(400).send({ error: true, message: "Lần đầu chỉ được khuyến nghị mua hoặc không khuyến nghị" });
+    }
+  } else if (lastRecommendation === "BUY") {
+    if (recommendation !== "SELL" && recommendation !== null) {
+      return res.status(400).send({ error: true, message: "Sau khi mua chỉ được khuyến nghị bán hoặc không khuyến nghị" });
+    }
+  } else if (lastRecommendation === "SELL") {
+    if (recommendation !== "BUY" && recommendation !== null) {
+      return res.status(400).send({ error: true, message: "Sau khi bán thì chỉ được khuyến nghị mua hoặc không khuyến nghị" });
+    }
+  }
+
+  let profitLossPercentage = null;
+  
+  // Nếu bài đăng mới là SELL và có bài BUY trước đó thì tính % lợi nhuận/lỗ
+  if (recommendation === "SELL" && lastRecommendation === "BUY" && lastPrice) {
+    profitLossPercentage = ((price - lastPrice) / lastPrice) * 100;
+  }
+
+  // Lưu bài viết vào database
   await query(
-    "INSERT INTO topics (title, image, symbol_name, description, userId, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+    "INSERT INTO topics (title, image, symbol_name, description, userId, created_at, recommendation, price, profit_loss) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
     [
       title,
       image,
@@ -635,10 +673,102 @@ app.post("/createTopic", authenticateToken, async (req, res) => {
       description,
       userId,
       moment().format("YYYY-MM-DD HH:mm:ss"),
+      recommendation || null, // Nếu không có khuyến nghị thì lưu NULL
+      price,
+      profitLossPercentage // Lưu % lợi nhuận/lỗ vào database (nếu có)
     ]
   );
-  res.send({ error: false, message: "New topic created successfully" });
+
+  res.send({
+    error: false,
+    message: "New topic created successfully",
+    profitLossPercentage: profitLossPercentage !== null ? `${profitLossPercentage.toFixed(2)}%` : "N/A"
+  });
 });
+
+app.get("/topics/leaderboard", async (req, res) => {
+  try {
+    // Truy vấn lấy tất cả các dòng dữ liệu (mỗi dòng ứng với 1 stock của user)
+    const rows = await query(
+      `SELECT 
+          u.image AS avatar, 
+          u.name,
+          u.userId, 
+          t.symbol_name AS stock,
+          MAX(t.profit_loss) AS highest_profit_loss,
+          (
+            SELECT created_at 
+            FROM topics 
+            WHERE userId = t.userId 
+              AND symbol_name = t.symbol_name 
+              AND recommendation = 'BUY'
+            ORDER BY created_at DESC 
+            LIMIT 1
+          ) AS buy_recommend_date,
+          (
+            SELECT price 
+            FROM topics 
+            WHERE userId = t.userId 
+              AND symbol_name = t.symbol_name 
+              AND recommendation = 'BUY'
+            ORDER BY created_at DESC 
+            LIMIT 1
+          ) AS buy_recommend_price,
+          (
+            SELECT COUNT(*) 
+            FROM topics 
+            WHERE userId = t.userId 
+              AND symbol_name = t.symbol_name 
+              AND recommendation = 'BUY'
+          ) AS buy_count
+        FROM topics t
+        JOIN users u ON t.userId = u.userId
+        WHERE t.profit_loss IS NOT NULL
+        GROUP BY t.userId, t.symbol_name
+        ORDER BY highest_profit_loss DESC`
+    );
+
+    // Nhóm dữ liệu theo userId để tạo cấu trúc cấp đầu tiên là user
+    // và cấp thứ 2 là mảng khuyến nghị của user đó.
+    const leaderboardGrouped = rows.reduce((acc, row) => {
+      const userId = row.userId;
+      if (!acc[userId]) {
+        acc[userId] = {
+          avatar: row.avatar,
+          name: row.name,
+          userId: row.userId,
+          recommendations: []
+        };
+      }
+      acc[userId].recommendations.push({
+        stock: row.stock,
+        highest_profit_loss: row.highest_profit_loss,
+        buy_recommend_date: row.buy_recommend_date,
+        buy_recommend_price: row.buy_recommend_price,
+        buy_count: row.buy_count
+      });
+      return acc;
+    }, {});
+
+    // Chuyển đổi đối tượng kết quả sang mảng
+    const leaderboard = Object.values(leaderboardGrouped);
+
+    res.status(200).send({
+      error: false,
+      leaderboard
+    });
+  } catch (error) {
+    console.error("Error fetching leaderboard: ", error);
+    res.status(500).send({
+      error: true,
+      message: "Có lỗi xảy ra khi truy vấn dữ liệu leaderboard"
+    });
+  }
+});
+
+
+
+
 
 // API to record a view for a topic
 app.post("/topics/:topic_id/view", authenticateToken, async (req, res) => {
@@ -1400,8 +1530,6 @@ app.get("/getUserDetail/:userId", authenticateToken, async (req, res) => {
     let status = "not";
 
     let selectAll;
-    console.log("currentUserId: ", currentUserId);
-    console.log("targetUserId: ", targetUserId);
     if (currentUserId) {
       selectAll = await query(
         "SELECT * FROM friendships WHERE (user1_id = ? AND user2_id = ?) OR (user2_id = ? AND user1_id = ?)",
