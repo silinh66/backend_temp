@@ -621,9 +621,20 @@ app.get("/financial-reports/:symbol", async (req, res) => {
 
 app.post("/createTopic", authenticateToken, async (req, res) => {
   let { title, image, symbol_name, description, userId, recommendation, price } = req.body;
+  
+  // Lấy thông tin của các công ty và danh sách theo dõi của người dùng
+  let data = await query("SELECT * FROM info_company");
+  let dataFollow = await query("SELECT * FROM follows_topic WHERE userId = ?", [ userId ]);
 
+  // Kiểm tra các trường bắt buộc
   if (!title || !symbol_name || !description || !userId) {
     return res.status(400).send({ error: true, message: "Please provide all required fields" });
+  }
+
+  // Kiểm tra xem người dùng đã follow công ty (dựa trên symbol_name) hay chưa
+  const isFollowing = dataFollow.some(follow => follow.symbol === symbol_name);
+  if (!isFollowing) {
+    return res.status(400).send({ error: true, message: "Bạn chưa follow công ty này, vui lòng follow để đăng bài" });
   }
 
   // Chỉ chấp nhận các giá trị hợp lệ cho recommendation
@@ -685,6 +696,7 @@ app.post("/createTopic", authenticateToken, async (req, res) => {
     profitLossPercentage: profitLossPercentage !== null ? `${profitLossPercentage.toFixed(2)}%` : "N/A"
   });
 });
+
 
 app.get("/topics/leaderboard", async (req, res) => {
   try {
