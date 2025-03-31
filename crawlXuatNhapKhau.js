@@ -26,8 +26,8 @@ const getPrevMonthNumber = (curMonth) => {
   return curMonth - 1;
 };
 
-const curMonthNumber = 12;
-const curYear = 2024;
+const curMonthNumber = 2;
+const curYear = 2025;
 const prevMonth = getPrevMonthString(curMonthNumber);
 const prevMonthNumber = getPrevMonthNumber(curMonthNumber);
 const curMonth = convertMonthNumberToString(curMonthNumber);
@@ -169,6 +169,6 @@ const crawlNhapKhau = async () => {
   );
 };
 
-// crawlXuatKhau();
+crawlXuatKhau();
 
-crawlNhapKhau();
+// crawlNhapKhau();

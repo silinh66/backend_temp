@@ -31,6 +31,7 @@ const moment = require("moment");
 })();
 
 const getNews = async (symbol) => {
+  console.log(1111)
   let toDate = moment().format("DD%2FMM%2FYYYY");
   let fromDate = moment().subtract(5, "months").format("DD%2FMM%2FYYYY");
   try {
@@ -114,4 +115,4 @@ const getNews = async (symbol) => {
   }
 };
 
-// getNews("SSI");
+getNews("VIC");

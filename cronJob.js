@@ -40,6 +40,8 @@ cron.schedule("*/5 * * * *", () => {
 cron.schedule("*/5 * * * * *", () => {
   // getChangeCount();
   // getIboard();
+  // getNewsDaily();
+
 });
 
 //cronjob every 15 seconds

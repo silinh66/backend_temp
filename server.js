@@ -244,7 +244,7 @@ const authenticateToken = (req, res, next) => {
 };
 const emailConfig = "dautubenvung.vn@gmail.com";
 // const emailDocument = 'dautubenvung.academy@hotmail.com'
-const passwordConfig = "glcl vfls bzhw xxbm";
+const passwordConfig = "hubh heze kuua wkwg";
 app.get("/", function (req, res) {
   return res.send({ error: false, message: "hello from Đầu Tư Bền Vững" });
 });
