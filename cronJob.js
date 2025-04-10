@@ -39,7 +39,7 @@ cron.schedule("*/5 * * * *", () => {
 //cronjob every 5 seconds
 cron.schedule("*/5 * * * * *", () => {
   // getChangeCount();
-  // getIboard();
+  getIboard();
   // getNewsDaily();
 
 });

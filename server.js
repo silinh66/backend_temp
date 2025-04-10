@@ -628,13 +628,13 @@ app.post("/createTopic", authenticateToken, async (req, res) => {
 
   // Kiểm tra các trường bắt buộc
   if (!title || !symbol_name || !description || !userId) {
-    return res.status(400).send({ error: true, message: "Please provide all required fields" });
+    return res.status(400).send({ error: true, message: "Bạn phải nhập đầy đủ nội dung!" });
   }
 
   // Kiểm tra xem người dùng đã follow công ty (dựa trên symbol_name) hay chưa
   const isFollowing = dataFollow.some(follow => follow.symbol === symbol_name);
   if (!isFollowing) {
-    return res.status(400).send({ error: true, message: "Bạn chưa follow công ty này, vui lòng follow để đăng bài" });
+    return res.status(400).send({ error: true, message: `Bạn phải tham gia group ${symbol_name} mới có thể đăng bài!` });
   }
 
   // Chỉ chấp nhận các giá trị hợp lệ cho recommendation
