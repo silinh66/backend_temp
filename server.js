@@ -4100,8 +4100,9 @@ app.post("/listChiTieu/add", authenticateToken, async (req, res) => {
   try {
     // Giả sử các trường dữ liệu tín hiệu được gửi qua body của request
     const { signalInfo, ownerId, symbol, signalName } = req.body;
+ 
     let signalInfoStringify = JSON.stringify(signalInfo);
-
+    let symbolInfo= JSON.stringify(symbol);
     // Kiểm tra dữ liệu đầu vào
     if (!signalInfo || !ownerId) {
       return res
@@ -4114,7 +4115,7 @@ app.post("/listChiTieu/add", authenticateToken, async (req, res) => {
     // Thêm tín hiệu vào cơ sở dữ liệu
     await query(
       "INSERT INTO listchitieu (OwnerID, SignalInfo, CreatedAt, symbol, SignalName) VALUES (?, ?, ?, ?, ?)",
-      [ownerId, signalInfoStringify, creationDate, symbol, signalName]
+      [ownerId, signalInfoStringify, creationDate, symbolInfo, signalName]
     );
 
     res.send({ success: true, message: "Signal added successfully" });
