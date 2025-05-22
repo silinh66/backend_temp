@@ -339,108 +339,131 @@ app.get("/bctc/:symbol/:filename", function (req, res) {
 
 app.get("/getTopics/:symbol", async (req, res) => {
   const symbol = req.params.symbol;
-  const page = parseInt(req.query.page, 10) || 1; // Ensure base 10
+  const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 10;
-
-  // Validate 'sort' parameter
-  const allowedSortOptions = ["newest", "most_interacted"];
-  const sort = allowedSortOptions.includes(req.query.sort)
+  const sortOpts = ["newest", "most_interacted"];
+  const sort = sortOpts.includes(req.query.sort)
     ? req.query.sort
     : "newest";
-
   const offset = (page - 1) * limit;
 
-  // Determine ORDER BY clause based on sort parameter
-  let orderByClause = "topics.created_at DESC"; // Default to newest
+  let orderBy = "topics.created_at DESC";
   if (sort === "most_interacted") {
-    // Sum of likes and comments for interaction
-    orderByClause = "(like_count + comment_count) DESC";
+    orderBy = "(like_count + comment_count) DESC";
   }
 
-  // SQL to fetch topics with counts
   const topicsSql = `
     SELECT 
-      topics.*, 
-      users.name AS author, 
-      users.image AS avatar, 
-      COUNT(DISTINCT views_topic.topic_id) AS view_count,
-      COUNT(DISTINCT likes_topic.like_id) AS like_count,
+      topics.*,
+      users.name    AS author,
+      users.image   AS avatar,
+      COUNT(DISTINCT views_topic.topic_id)    AS view_count,
+      COUNT(DISTINCT likes_topic.like_id)     AS like_count,
       COUNT(DISTINCT comments_topic.comment_id) AS comment_count
     FROM topics
-    JOIN users ON topics.userId = users.userId
-    LEFT JOIN views_topic ON views_topic.topic_id = topics.topic_id
-    LEFT JOIN likes_topic ON likes_topic.topic_id = topics.topic_id
-    LEFT JOIN comments_topic ON comments_topic.topic_id = topics.topic_id
+    JOIN users   ON topics.userId = users.userId
+    LEFT JOIN views_topic    ON views_topic.topic_id   = topics.topic_id
+    LEFT JOIN likes_topic    ON likes_topic.topic_id   = topics.topic_id
+    LEFT JOIN comments_topic ON comments_topic.topic_id= topics.topic_id
     WHERE topics.symbol_name = ?
     GROUP BY topics.topic_id
-    ORDER BY ${orderByClause}
-    LIMIT ? OFFSET ?`;
+    ORDER BY ${orderBy}
+    LIMIT ? OFFSET ?
+  `;
 
-  // SQL to count total topics for the symbol
   const countSql = `
     SELECT COUNT(*) AS total
     FROM topics
-    WHERE topics.symbol_name = ?`;
+    WHERE symbol_name = ?
+  `;
 
   try {
-    // Execute both queries concurrently
-    const [topics, countResult] = await Promise.all([
+    // 1) Lấy topics & tổng
+    const [rawTopics, countRes] = await Promise.all([
       query(topicsSql, [symbol, limit, offset]),
-      query(countSql, [symbol]),
+      query(countSql, [symbol])
     ]);
+    const total = countRes[0]?.total || 0;
 
-    // Extract total count
-    const total = countResult[0]?.total || 0;
+    // 2) Parse trường image từ JSON string => JS array
+    // sau khi lấy rawTopics từ DB
+    const topics = rawTopics.map(t => {
+      let imgs = [];
 
-    if (!Array.isArray(topics)) {
-      throw new Error("Invalid topics data received from database");
-    }
+      if (t.image) {
+        if (typeof t.image === "string") {
+          try {
+            // thử parse JSON
+            const parsed = JSON.parse(t.image);
+            // nếu parse ra array thì dùng luôn, không thì wrap lại
+            imgs = Array.isArray(parsed) ? parsed : [t.image];
+          } catch {
+            // parse lỗi => coi như 1 string URL, gói vào array
+            imgs = [t.image];
+          }
+        } else if (Array.isArray(t.image)) {
+          // MySQL JSON column đã parse sẵn thành array
+          imgs = t.image;
+        }
+      }
 
-    // Fetch likes details for the fetched topics
-    const topicIds = topics.map((topic) => topic.topic_id);
+      return {
+        ...t,
+        image: imgs    // luôn là string[]
+      };
+    });
+
+
+    // 3) Lấy chi tiết likes để enrich
+    const topicIds = topics.map(t => t.topic_id);
     let likes = [];
-    if (topicIds.length > 0) {
+    if (topicIds.length) {
       const likesSql = `
         SELECT 
-          likes_topic.topic_id, 
-          users.userId, 
-          users.name, 
+          likes_topic.topic_id,
+          users.userId,
+          users.name,
           users.image AS avatar
         FROM likes_topic
         JOIN users ON likes_topic.userId = users.userId
-        WHERE likes_topic.topic_id IN (?)`;
+        WHERE likes_topic.topic_id IN (?)
+      `;
       likes = await query(likesSql, [topicIds]);
     }
 
-    // Map likes to their respective topics
+    // 4) Map likes vào mỗi topic
     const likesMap = {};
-    likes.forEach((like) => {
-      if (!likesMap[like.topic_id]) {
-        likesMap[like.topic_id] = [];
-      }
-      likesMap[like.topic_id].push({
-        userId: like.userId,
-        name: like.name,
-        avatar: like.avatar,
+    likes.forEach(l => {
+      likesMap[l.topic_id] ??= [];
+      likesMap[l.topic_id].push({
+        userId: l.userId,
+        name: l.name,
+        avatar: l.avatar
       });
     });
 
-    // Assign likes to each topic
-    const enrichedTopics = topics.map((topic) => ({
-      ...topic,
-      likes: likesMap[topic.topic_id] || [],
+    // 5) Gán thêm mảng likes vào từng topic
+    const enriched = topics.map(t => ({
+      ...t,
+      likes: likesMap[t.topic_id] || []
     }));
 
-    // Respond with topics and total count
-    res.json({ success: true, total, topics: enrichedTopics });
-  } catch (error) {
-    console.error("Error fetching topics:", error);
-    res.status(500).json({
+    // 6) Trả về client
+    return res.json({
+      success: true,
+      total,
+      topics: enriched
+    });
+
+  } catch (err) {
+    console.error("Error fetching topics:", err);
+    return res.status(500).json({
       success: false,
-      error: error.message || "An error occurred while fetching topics",
+      error: err.message || "Server error"
     });
   }
 });
+
 
 //follow a topic
 app.post("/followTopic", authenticateToken, async (req, res) => {
@@ -497,59 +520,100 @@ app.get("/getFollowedTopics", authenticateToken, async (req, res) => {
 });
 
 app.get("/getTopicsAll", async (req, res) => {
-  const { page = 1, pageSize = 10, sortLike = "newest" } = req.query; // Lấy sortLike từ query parameters
+  const { page = 1, pageSize = 10, sortLike = "newest" } = req.query;
   const offset = (page - 1) * pageSize;
 
-  let orderByClause = "topics.created_at DESC"; // Default: newest
-
+  // Thiết lập ORDER BY
+  let orderByClause = "topics.created_at DESC";
   if (sortLike === "more-interaction") {
     orderByClause = `
-      (SELECT COUNT(*) FROM likes_topic WHERE likes_topic.topic_id = topics.topic_id) + 
-      (SELECT COUNT(*) FROM comments_topic WHERE comments_topic.topic_id = topics.topic_id) + 
-      (SELECT COUNT(*) FROM views_topic WHERE views_topic.topic_id = topics.topic_id) DESC`; // Sắp xếp theo tương tác
+      (SELECT COUNT(*) FROM likes_topic   WHERE likes_topic.topic_id   = topics.topic_id) +
+      (SELECT COUNT(*) FROM comments_topic WHERE comments_topic.topic_id = topics.topic_id) +
+      (SELECT COUNT(*) FROM views_topic    WHERE views_topic.topic_id    = topics.topic_id)
+      DESC
+    `;
   }
 
   const topicsSql = `
-    SELECT topics.*, users.name as author, users.image as avatar, 
-           (SELECT COUNT(*) FROM views_topic WHERE views_topic.topic_id = topics.topic_id) as view_count,
-           (SELECT COUNT(*) FROM likes_topic WHERE likes_topic.topic_id = topics.topic_id) as like_count,
-           (SELECT COUNT(*) FROM comments_topic WHERE comments_topic.topic_id = topics.topic_id) as comment_count
+    SELECT 
+      topics.*,
+      users.name   AS author,
+      users.image  AS avatar,
+      (SELECT COUNT(*) FROM views_topic    WHERE views_topic.topic_id    = topics.topic_id) AS view_count,
+      (SELECT COUNT(*) FROM likes_topic    WHERE likes_topic.topic_id    = topics.topic_id) AS like_count,
+      (SELECT COUNT(*) FROM comments_topic WHERE comments_topic.topic_id = topics.topic_id) AS comment_count
     FROM topics
     JOIN users ON topics.userId = users.userId
-    ORDER BY ${orderByClause}  -- Sắp xếp theo điều kiện đã chọn
-    LIMIT ? OFFSET ?`;
+    ORDER BY ${orderByClause}
+    LIMIT ? OFFSET ?
+  `;
 
   try {
-    let topics = await query(topicsSql, [parseInt(pageSize), offset]);
+    // 1) Lấy page
+    let topics = await query(topicsSql, [parseInt(pageSize, 10), parseInt(offset, 10)]);
 
-    // Thêm likes vào mỗi chủ đề
-    for (let topic of topics) {
+    // 2) Parse trường image thành mảng
+    topics = topics.map(topic => {
+      let imgs = [];
+      if (topic.image) {
+        // nếu MySQL trả về JSON object thì dùng luôn, nếu là string thì parse
+        imgs = typeof topic.image === "string"
+          ? JSON.parse(topic.image)
+          : topic.image;
+      }
+      return { ...topic, image: imgs };
+    });
+
+    // 3) Lấy likes cho tất cả topic trong một query (đỡ N lần gọi)
+    const topicIds = topics.map(t => t.topic_id);
+    let likesMap = {};
+    if (topicIds.length) {
       const likesSql = `
-        SELECT users.userId, users.name, users.image as avatar
+        SELECT 
+          likes_topic.topic_id,
+          users.userId,
+          users.name,
+          users.image AS avatar
         FROM likes_topic
         JOIN users ON likes_topic.userId = users.userId
-        WHERE likes_topic.topic_id = ?`;
-      let likes = await query(likesSql, [topic.topic_id]);
-      topic.likes = likes;
+        WHERE likes_topic.topic_id IN (?)
+      `;
+      const allLikes = await query(likesSql, [topicIds]);
+      // gom nhóm theo topic_id
+      allLikes.forEach(l => {
+        likesMap[l.topic_id] ??= [];
+        likesMap[l.topic_id].push({
+          userId: l.userId,
+          name: l.name,
+          avatar: l.avatar
+        });
+      });
     }
 
-    // Lấy tổng số topic để hỗ trợ phân trang ở phía client
-    const totalTopicsSql = "SELECT COUNT(*) as total FROM topics";
-    const totalResult = await query(totalTopicsSql);
-    const totalTopics = totalResult[0].total;
+    // 4) Gán likes vào từng topic
+    topics = topics.map(t => ({
+      ...t,
+      likes: likesMap[t.topic_id] || []
+    }));
 
-    res.json({
+    // 5) Lấy tổng số topic
+    const totalResult = await query("SELECT COUNT(*) AS total FROM topics");
+    const totalTopics = totalResult[0].total || 0;
+
+    return res.json({
       success: true,
       topics,
       totalTopics,
-      currentPage: parseInt(page),
-      pageSize: parseInt(pageSize),
+      currentPage: parseInt(page, 10),
+      pageSize: parseInt(pageSize, 10)
     });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({ error: "An error occurred while fetching topics" });
+  }
+  catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
+
 
 //get list topic of specific user
 app.get("/getTopicsByUser/:userId", async (req, res) => {
@@ -621,10 +685,10 @@ app.get("/financial-reports/:symbol", async (req, res) => {
 
 app.post("/createTopic", authenticateToken, async (req, res) => {
   let { title, image, symbol_name, description, userId, recommendation, price } = req.body;
-  
+
   // Lấy thông tin của các công ty và danh sách theo dõi của người dùng
   let data = await query("SELECT * FROM info_company");
-  let dataFollow = await query("SELECT * FROM follows_topic WHERE userId = ?", [ userId ]);
+  let dataFollow = await query("SELECT * FROM follows_topic WHERE userId = ?", [userId]);
 
   // Kiểm tra các trường bắt buộc
   if (!title || !symbol_name || !description || !userId) {
@@ -668,18 +732,24 @@ app.post("/createTopic", authenticateToken, async (req, res) => {
   }
 
   let profitLossPercentage = null;
-  
+
   // Nếu bài đăng mới là SELL và có bài BUY trước đó thì tính % lợi nhuận/lỗ
   if (recommendation === "SELL" && lastRecommendation === "BUY" && lastPrice) {
     profitLossPercentage = ((price - lastPrice) / lastPrice) * 100;
   }
+  const imagesArray = Array.isArray(image)
+    ? image
+    : image ? [image]
+      : [];
 
+
+  const imageJson = JSON.stringify(imagesArray);
   // Lưu bài viết vào database
   await query(
     "INSERT INTO topics (title, image, symbol_name, description, userId, created_at, recommendation, price, profit_loss) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
     [
       title,
-      image,
+      imageJson,
       symbol_name,
       description,
       userId,
@@ -1068,23 +1138,23 @@ app.get("/change_count/:type", async function (req, res) {
     data =
       type === "VNINDEX"
         ? [
-            {
-              index: "VNINDEX",
-              noChange: 0,
-              decline: 0,
-              advance: 0,
-              time: "14:45:08",
-            },
-          ]
+          {
+            index: "VNINDEX",
+            noChange: 0,
+            decline: 0,
+            advance: 0,
+            time: "14:45:08",
+          },
+        ]
         : [
-            {
-              index: "HNX",
-              noChange: 0,
-              decline: 0,
-              advance: 0,
-              time: "14:45:08",
-            },
-          ];
+          {
+            index: "HNX",
+            noChange: 0,
+            decline: 0,
+            advance: 0,
+            time: "14:45:08",
+          },
+        ];
   }
   res.send({ error: false, data: data, message: "config list." });
 });
@@ -1310,30 +1380,30 @@ app.post("/forgot-password", (req, res) => {
   }
 });
 
-app.post("/change-password-contact", async (req, res) => {
-  const { contact, password } = req.body;
-  const password_hash = await bcrypt.hash(password, 10);
+// app.post("/change-password-contact", async (req, res) => {
+//   const { contact, password } = req.body;
+//   const password_hash = await bcrypt.hash(password, 10);
 
-  let response;
-  if (validateEmail(contact)) {
-    response = await query("UPDATE users SET password = ? WHERE email = ?", [
-      password_hash,
-      contact,
-    ]);
-  } else if (validatePhoneNumber(contact)) {
-    response = await query(
-      "UPDATE users SET password = ? WHERE phone_number = ?",
-      [password_hash, contact]
-    );
-  } else {
-    return res.status(400).send("Invalid contact information");
-  }
+//   let response;
+//   if (validateEmail(contact)) {
+//     response = await query("UPDATE users SET password = ? WHERE email = ?", [
+//       password_hash,
+//       contact,
+//     ]);
+//   } else if (validatePhoneNumber(contact)) {
+//     response = await query(
+//       "UPDATE users SET password = ? WHERE phone_number = ?",
+//       [password_hash, contact]
+//     );
+//   } else {
+//     return res.status(400).send("Invalid contact information");
+//   }
 
-  if (!response) {
-    return res.status(500).send("Failed to update password");
-  }
-  return res.status(200).json({ message: "Đổi pass thành công!" });
-});
+//   if (!response) {
+//     return res.status(500).send("Failed to update password");
+//   }
+//   return res.status(200).json({ message: "Đổi pass thành công!" });
+// });
 
 function validateEmail(email) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -1347,6 +1417,7 @@ function validatePhoneNumber(phoneNumber) {
 
 app.post("/change-password", async (req, res) => {
   const { userID, currentPassword, newPassword } = req.body;
+  console.log("userID: ", userID);
 
   // Ensure all required fields are provided
   if (!userID || !currentPassword || !newPassword) {
@@ -1357,6 +1428,7 @@ app.post("/change-password", async (req, res) => {
 
   // Query the database for user by userID
   let results = await query("SELECT * FROM users WHERE userID = ?", [userID]);
+  console.log("results: ", results);
 
   if (results.length === 0) {
     return res.status(401).send({ error: "User not found" });
@@ -2211,10 +2283,10 @@ app.get("/forums/following", authenticateToken, async (req, res) => {
   try {
     const forums = await query(
       "SELECT f.forum_id, f.name, f.image_url, f.description, " +
-        "(SELECT COUNT(*) FROM forum_posts WHERE forum_id = f.forum_id) as post_count " +
-        "FROM forums f " +
-        "JOIN forum_followers ff ON f.forum_id = ff.forum_id " +
-        "WHERE ff.userId = ?",
+      "(SELECT COUNT(*) FROM forum_posts WHERE forum_id = f.forum_id) as post_count " +
+      "FROM forums f " +
+      "JOIN forum_followers ff ON f.forum_id = ff.forum_id " +
+      "WHERE ff.userId = ?",
       [userId]
     );
     res.json({ success: true, forums });
@@ -2630,8 +2702,7 @@ app.get("/financial-ratio", async (req, res) => {
   let type = req.query?.type;
   try {
     let financialRatio = await query(
-      `SELECT * FROM financial_ratio WHERE organCode = ? and lengthReport ${
-        type === "year" ? ">= 5" : "< 5"
+      `SELECT * FROM financial_ratio WHERE organCode = ? and lengthReport ${type === "year" ? ">= 5" : "< 5"
       }`,
       [symbol]
     );
@@ -2755,7 +2826,7 @@ app.get("/data-vi-mo", async function (req, res) {
             tangTruongCungKy:
               (item?.gdp_theo_gia_hien_hanh /
                 gdpDanhNghia[index - 4]?.gdp_theo_gia_hien_hanh) *
-                100 -
+              100 -
               100,
           })),
           header: [
@@ -2833,7 +2904,7 @@ app.get("/data-vi-mo", async function (req, res) {
             tangTruongCungKy:
               (item?.tong_ban_le_hh_va_dv /
                 tongMucBanLeDichVu[index - 12]?.tong_ban_le_hh_va_dv) *
-                100 -
+              100 -
               100,
           })),
           header: [
@@ -2929,7 +3000,7 @@ app.get("/data-vi-mo", async function (req, res) {
               tangTruongCungKy:
                 (item?.von_nsnn_tong /
                   vonDauTuNganSachNhaNuoc[index - 12]?.von_nsnn_tong) *
-                  100 -
+                100 -
                 100,
             })
           ),
@@ -3837,10 +3908,10 @@ app.get("/signals/list-share-request", authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     const sharedSignals = await query(
       "SELECT sharedsignals.*, users.name, users.image, users.userID, users.isOnline, signals.* " +
-        "FROM sharedsignals " +
-        "JOIN users ON sharedsignals.SenderID = users.userID " +
-        "JOIN signals ON sharedsignals.SignalID = signals.SignalID " +
-        "WHERE sharedsignals.ReceiverID = ? AND sharedsignals.Status = 'PENDING'",
+      "FROM sharedsignals " +
+      "JOIN users ON sharedsignals.SenderID = users.userID " +
+      "JOIN signals ON sharedsignals.SignalID = signals.SignalID " +
+      "WHERE sharedsignals.ReceiverID = ? AND sharedsignals.Status = 'PENDING'",
       [userId]
     );
     res.send({ success: true, sharedSignals });
@@ -3872,9 +3943,9 @@ app.get("/signals/shared", authenticateToken, async (req, res) => {
     const SignalID = req.query.SignalID;
     const sharedSignals = await query(
       "SELECT SharedSignals.*, users.name, users.image, users.userID, users.isOnline " +
-        "FROM SharedSignals " +
-        "JOIN users ON SharedSignals.ReceiverID = users.userID " +
-        "WHERE SharedSignals.SignalID = ?",
+      "FROM SharedSignals " +
+      "JOIN users ON SharedSignals.ReceiverID = users.userID " +
+      "WHERE SharedSignals.SignalID = ?",
       [SignalID]
     );
     res.send({ success: true, sharedSignals });
@@ -4024,10 +4095,10 @@ app.get(
       const userId = req.user.userId;
       const sharedSignals = await query(
         "SELECT shared_listChiTieu.*, users.name, users.image, users.userID, users.isOnline, listchitieu.* " +
-          "FROM shared_listChiTieu " +
-          "JOIN users ON shared_listChiTieu.SenderID = users.userID " +
-          "JOIN listchitieu ON shared_listChiTieu.SignalID = listchitieu.SignalID " +
-          "WHERE shared_listChiTieu.ReceiverID = ? AND shared_listChiTieu.Status = 'PENDING'",
+        "FROM shared_listChiTieu " +
+        "JOIN users ON shared_listChiTieu.SenderID = users.userID " +
+        "JOIN listchitieu ON shared_listChiTieu.SignalID = listchitieu.SignalID " +
+        "WHERE shared_listChiTieu.ReceiverID = ? AND shared_listChiTieu.Status = 'PENDING'",
         [userId]
       );
       res.send({ success: true, sharedSignals });
@@ -4082,9 +4153,9 @@ app.get("/listChiTieu/shared", authenticateToken, async (req, res) => {
 
     const sharedSignals = await query(
       "SELECT shared_listChiTieu.*, users.name, users.image, users.userID, users.isOnline " +
-        "FROM shared_listChiTieu " +
-        "JOIN users ON shared_listChiTieu.ReceiverID = users.userID " +
-        "WHERE shared_listChiTieu.SignalID = ?",
+      "FROM shared_listChiTieu " +
+      "JOIN users ON shared_listChiTieu.ReceiverID = users.userID " +
+      "WHERE shared_listChiTieu.SignalID = ?",
       [SignalID]
     );
 
@@ -4100,9 +4171,9 @@ app.post("/listChiTieu/add", authenticateToken, async (req, res) => {
   try {
     // Giả sử các trường dữ liệu tín hiệu được gửi qua body của request
     const { signalInfo, ownerId, symbol, signalName } = req.body;
- 
+
     let signalInfoStringify = JSON.stringify(signalInfo);
-    let symbolInfo= JSON.stringify(symbol);
+    let symbolInfo = JSON.stringify(symbol);
     // Kiểm tra dữ liệu đầu vào
     if (!signalInfo || !ownerId) {
       return res
@@ -5473,8 +5544,7 @@ app.get("/top_gdnn_rong_ban/:type", async function (req, res) {
   let type = req.params.type;
   try {
     let data = await axios.get(
-      `https://fwtapi3.fialda.com/api/services/app/Stock/GetTopNetForeign?type=VALUE&side=SALE&exchange=${
-        type === "hose" ? "HSX" : "HNX"
+      `https://fwtapi3.fialda.com/api/services/app/Stock/GetTopNetForeign?type=VALUE&side=SALE&exchange=${type === "hose" ? "HSX" : "HNX"
       }&period=oneDay&numberOfItem=`
     );
     res.send({
@@ -5539,8 +5609,7 @@ app.get("/top_gdnn_rong_mua/:type", async function (req, res) {
   let type = req.params.type;
   try {
     let data = await axios.get(
-      `https://fwtapi3.fialda.com/api/services/app/Stock/GetTopNetForeign?type=VALUE&side=BUY&exchange=${
-        type === "hose" ? "HSX" : "HNX"
+      `https://fwtapi3.fialda.com/api/services/app/Stock/GetTopNetForeign?type=VALUE&side=BUY&exchange=${type === "hose" ? "HSX" : "HNX"
       }&period=oneDay&numberOfItem=`
     );
     res.send({
@@ -7248,9 +7317,8 @@ app.post("/filter", async function (req, res) {
       .status(400)
       .send({ error: true, message: "Please provide data" });
   }
-  let queryString = `SELECT * FROM index_value ${
-    data.length > 0 ? "WHERE " : ""
-  } `;
+  let queryString = `SELECT * FROM index_value ${data.length > 0 ? "WHERE " : ""
+    } `;
   for (let i = 0; i < data.length; i++) {
     let tieuChi = data[i];
     let {
@@ -7484,276 +7552,217 @@ app.post("/filter", async function (req, res) {
     switch (label) {
       //RSI
       case "Giá trị RSI14":
-        queryString += `0 + rsi14 > 0 + ${
-          rightIndexValue[0]
-        } && 0 + rsi14 < 0 + ${rightIndexValue[1]} ${
-          i < data.length - 1 ? "&& " : ""
-        }`;
+        queryString += `0 + rsi14 > 0 + ${rightIndexValue[0]
+          } && 0 + rsi14 < 0 + ${rightIndexValue[1]} ${i < data.length - 1 ? "&& " : ""
+          }`;
         break;
       case "RSI14 so với các vùng giá trị":
-        queryString += `0 + rsi14 ${compareString} 0 + ${
-          rightIndexList[rightIndexValue]
-        } ${i < data.length - 1 ? "&& " : ""}`;
+        queryString += `0 + rsi14 ${compareString} 0 + ${rightIndexList[rightIndexValue]
+          } ${i < data.length - 1 ? "&& " : ""}`;
         break;
       case "RSI14 và vùng Quá mua/Quá bán":
-        queryString += `0 + rsi14_yesterday ${compareString[0]} 0 + ${
-          rightIndexValue === 0 ? 70 : 30
-        } && 0 + rsi14 ${compareString[1]} 0 + ${
-          rightIndexValue === 0 ? 70 : 30
-        } ${i < data.length - 1 ? "&& " : ""}`;
+        queryString += `0 + rsi14_yesterday ${compareString[0]} 0 + ${rightIndexValue === 0 ? 70 : 30
+          } && 0 + rsi14 ${compareString[1]} 0 + ${rightIndexValue === 0 ? 70 : 30
+          } ${i < data.length - 1 ? "&& " : ""}`;
         break;
       //EMA
       case "Giá so với đường TB - EMA":
-        queryString += `0 + close ${compareString} 0 + ${right} ${
-          i < data.length - 1 ? "&& " : ""
-        }`;
+        queryString += `0 + close ${compareString} 0 + ${right} ${i < data.length - 1 ? "&& " : ""
+          }`;
         break;
       case "Giá cắt đường TB - EMA":
-        queryString += `0 + close_yesterday ${
-          compareString[0]
-        } 0 + ${right}_yesterday && 0 + close ${
-          compareString[1]
-        } 0 + ${right} ${i < data.length - 1 ? "&& " : ""}`;
+        queryString += `0 + close_yesterday ${compareString[0]
+          } 0 + ${right}_yesterday && 0 + close ${compareString[1]
+          } 0 + ${right} ${i < data.length - 1 ? "&& " : ""}`;
         break;
       case "So sánh 2 đường TB - EMA":
         queryString += `0 + ${left} ${compareString} 0 + ${right}
            ${i < data.length - 1 ? "&& " : ""}`;
         break;
       case "Giao cắt 2 đường TB - EMA":
-        queryString += `0 + ${left}_yesterday ${
-          compareString[0]
-        } 0 + ${right}_yesterday && 0 + ${left} ${
-          compareString[1]
-        } 0 + ${right} ${i < data.length - 1 ? "&& " : ""}`;
+        queryString += `0 + ${left}_yesterday ${compareString[0]
+          } 0 + ${right}_yesterday && 0 + ${left} ${compareString[1]
+          } 0 + ${right} ${i < data.length - 1 ? "&& " : ""}`;
         break;
       //SMA
       case "Giá so với đường TB - MA":
-        queryString += `0 + close ${compareString} 0 + ${right} ${
-          i < data.length - 1 ? "&& " : ""
-        }`;
+        queryString += `0 + close ${compareString} 0 + ${right} ${i < data.length - 1 ? "&& " : ""
+          }`;
         break;
       case "So sánh 2 đường TB - MA":
         queryString += `0 + ${left} ${compareString} 0 + ${right}
            ${i < data.length - 1 ? "&& " : ""}`;
         break;
       case "Giao cắt 2 đường TB - MA":
-        queryString += `0 + ${left}_yesterday ${
-          compareString[0]
-        } 0 + ${right}_yesterday && 0 + ${left} ${
-          compareString[1]
-        } 0 + ${right} ${i < data.length - 1 ? "&& " : ""}`;
+        queryString += `0 + ${left}_yesterday ${compareString[0]
+          } 0 + ${right}_yesterday && 0 + ${left} ${compareString[1]
+          } 0 + ${right} ${i < data.length - 1 ? "&& " : ""}`;
         break;
       case "Giá cắt đường TB - MA":
-        queryString += `0 + close_yesterday ${
-          compareString[0]
-        } 0 + ${right}_yesterday && 0 + close ${
-          compareString[1]
-        } 0 + ${right} ${i < data.length - 1 ? "&& " : ""}`;
+        queryString += `0 + close_yesterday ${compareString[0]
+          } 0 + ${right}_yesterday && 0 + close ${compareString[1]
+          } 0 + ${right} ${i < data.length - 1 ? "&& " : ""}`;
         break;
 
       //ICHIMOKU
       case "Giá so với Tenkan(9)":
-        queryString += `0 + close ${compareString} 0 + tenkan ${
-          i < data.length - 1 ? "&& " : ""
-        }`;
+        queryString += `0 + close ${compareString} 0 + tenkan ${i < data.length - 1 ? "&& " : ""
+          }`;
         break;
       case "Giá so với Kijun(26)":
-        queryString += `0 + close ${compareString} 0 + kijun ${
-          i < data.length - 1 ? "&& " : ""
-        }`;
+        queryString += `0 + close ${compareString} 0 + kijun ${i < data.length - 1 ? "&& " : ""
+          }`;
         break;
       case "Giá so với Cloud(52)":
-        queryString += `0 + close ${compareString} 0 + cloud ${
-          i < data.length - 1 ? "&& " : ""
-        }`;
+        queryString += `0 + close ${compareString} 0 + cloud ${i < data.length - 1 ? "&& " : ""
+          }`;
         break;
       case "Giá giao cắt với Tenkan(9)":
-        queryString += `0 + close_yesterday ${
-          compareString[0]
-        } 0 + tenkan_yesterday && 0 + close ${compareString[1]} 0 + tenkan ${
-          i < data.length - 1 ? "&& " : ""
-        }`;
+        queryString += `0 + close_yesterday ${compareString[0]
+          } 0 + tenkan_yesterday && 0 + close ${compareString[1]} 0 + tenkan ${i < data.length - 1 ? "&& " : ""
+          }`;
         break;
       case "Giá giao cắt với Kijun(26)":
-        queryString += `0 + close_yesterday ${
-          compareString[0]
-        } 0 + kijun_yesterday && 0 + close ${compareString[1]} 0 + kijun ${
-          i < data.length - 1 ? "&& " : ""
-        }`;
+        queryString += `0 + close_yesterday ${compareString[0]
+          } 0 + kijun_yesterday && 0 + close ${compareString[1]} 0 + kijun ${i < data.length - 1 ? "&& " : ""
+          }`;
         break;
       case "Giá giao cắt với Cloud(52)":
-        queryString += `0 + close_yesterday ${
-          compareString[0]
-        } 0 + cloud_yesterday && 0 + close ${compareString[1]} 0 + cloud ${
-          i < data.length - 1 ? "&& " : ""
-        }`;
+        queryString += `0 + close_yesterday ${compareString[0]
+          } 0 + cloud_yesterday && 0 + close ${compareString[1]} 0 + cloud ${i < data.length - 1 ? "&& " : ""
+          }`;
         break;
       case "Giao cắt thành phần Ichimoku":
-        queryString += `0 + ${left}_yesterday ${
-          compareString[0]
-        } 0 + ${right}_yesterday && 0 + ${left} ${
-          compareString[1]
-        } 0 + ${right} ${i < data.length - 1 ? "&& " : ""}`;
+        queryString += `0 + ${left}_yesterday ${compareString[0]
+          } 0 + ${right}_yesterday && 0 + ${left} ${compareString[1]
+          } 0 + ${right} ${i < data.length - 1 ? "&& " : ""}`;
         break;
       //MACD
       case "MACD so với Signal":
-        queryString += `0 + macd ${compareString} 0 + signal_today ${
-          i < data.length - 1 ? "&& " : ""
-        }`;
+        queryString += `0 + macd ${compareString} 0 + signal_today ${i < data.length - 1 ? "&& " : ""
+          }`;
         break;
       case "MACD cắt với Signal":
-        queryString += `0 + macd_yesterday ${
-          compareString[0]
-        } 0 + signal_yesterday && 0 + macd ${
-          compareString[1]
-        } 0 + signal_today ${i < data.length - 1 ? "&& " : ""}`;
+        queryString += `0 + macd_yesterday ${compareString[0]
+          } 0 + signal_yesterday && 0 + macd ${compareString[1]
+          } 0 + signal_today ${i < data.length - 1 ? "&& " : ""}`;
         break;
       case "Trạng thái giá trị của MACD":
         let leftIndex = leftIndexValue === 0 ? "macd" : "signal_today";
         if (rightIndexValue === 0) {
-          queryString += `0 + ${leftIndex} >= 0 ${
-            i < data.length - 1 ? "&& " : ""
-          }`;
+          queryString += `0 + ${leftIndex} >= 0 ${i < data.length - 1 ? "&& " : ""
+            }`;
         }
         if (rightIndexValue === 1) {
-          queryString += `0 + ${leftIndex} < 0 ${
-            i < data.length - 1 ? "&& " : ""
-          }`;
+          queryString += `0 + ${leftIndex} < 0 ${i < data.length - 1 ? "&& " : ""
+            }`;
         }
         if (rightIndexValue === 2) {
-          queryString += `0 + ${leftIndex} > 0 && 0 + ${
-            leftIndex === "macd" ? "macd_yesterday" : "signal_yesterday"
-          } < 0 ${i < data.length - 1 ? "&& " : ""}`;
+          queryString += `0 + ${leftIndex} > 0 && 0 + ${leftIndex === "macd" ? "macd_yesterday" : "signal_yesterday"
+            } < 0 ${i < data.length - 1 ? "&& " : ""}`;
         }
         if (rightIndexValue === 3) {
-          queryString += `0 + ${leftIndex} < 0 && 0 + ${
-            leftIndex === "macd" ? "macd_yesterday" : "signal_yesterday"
-          }  > 0 ${i < data.length - 1 ? "&& " : ""}`;
+          queryString += `0 + ${leftIndex} < 0 && 0 + ${leftIndex === "macd" ? "macd_yesterday" : "signal_yesterday"
+            }  > 0 ${i < data.length - 1 ? "&& " : ""}`;
         }
       case "Histogram tăng liên tục":
         for (let j = 1; j < rightIndexValue + 1; j++) {
-          queryString += `0 + histogram${j} > 0 + histogram${j + 1} ${
-            j < rightIndexValue ? "&&" : ""
-          } `;
+          queryString += `0 + histogram${j} > 0 + histogram${j + 1} ${j < rightIndexValue ? "&&" : ""
+            } `;
         }
         queryString += `${i < data.length - 1 ? "&& " : ""}`;
         break;
       case "Histogram giảm liên tục":
         for (let j = 1; j < rightIndexValue + 1; j++) {
-          queryString += `0 + histogram${j} < 0 + histogram${j + 1} ${
-            j < rightIndexValue ? "&&" : ""
-          } `;
+          queryString += `0 + histogram${j} < 0 + histogram${j + 1} ${j < rightIndexValue ? "&&" : ""
+            } `;
         }
         queryString += `${i < data.length - 1 ? "&& " : ""}`;
         break;
       case "Giá tăng vượt Biên trên":
-        queryString += `0 + close > 0 + upperBB1 && 0 + close_yesterday < upperBB2 ${
-          i < data.length - 1 ? "&& " : ""
-        }`;
+        queryString += `0 + close > 0 + upperBB1 && 0 + close_yesterday < upperBB2 ${i < data.length - 1 ? "&& " : ""
+          }`;
         break;
       case "Giá giảm qua Biên trên":
-        queryString += `0 + close < 0 + upperBB1 && 0 + close_yesterday > upperBB2 ${
-          i < data.length - 1 ? "&& " : ""
-        }`;
+        queryString += `0 + close < 0 + upperBB1 && 0 + close_yesterday > upperBB2 ${i < data.length - 1 ? "&& " : ""
+          }`;
         break;
       case "Giá giảm thủng Biên dưới":
-        queryString += `0 + close < 0 + lowerBB1 && 0 + close_yesterday > lowerBB2 ${
-          i < data.length - 1 ? "&& " : ""
-        }`;
+        queryString += `0 + close < 0 + lowerBB1 && 0 + close_yesterday > lowerBB2 ${i < data.length - 1 ? "&& " : ""
+          }`;
         break;
       case "Giá tăng qua Biên dưới":
-        queryString += `0 + close > 0 + lowerBB1 && 0 + close_yesterday < lowerBB2 ${
-          i < data.length - 1 ? "&& " : ""
-        }`;
+        queryString += `0 + close > 0 + lowerBB1 && 0 + close_yesterday < lowerBB2 ${i < data.length - 1 ? "&& " : ""
+          }`;
         break;
       case "Giá duy trì vượt ngoài Biên trên Bollinger":
         for (let j = 1; j < rightIndexValue + 1; j++) {
-          queryString += `0 + close${j} > 0 + upperBB${j} ${
-            j < rightIndexValue ? "&&" : ""
-          } `;
+          queryString += `0 + close${j} > 0 + upperBB${j} ${j < rightIndexValue ? "&&" : ""
+            } `;
         }
         queryString += `${i < data.length - 1 ? "&& " : ""}`;
         break;
       case "Giá duy trì ngoài Biên dưới Bollinger":
         for (let j = 1; j < rightIndexValue + 1; j++) {
-          queryString += `0 + close${j} < 0 + lowerBB${j} ${
-            j < rightIndexValue ? "&&" : ""
-          } `;
+          queryString += `0 + close${j} < 0 + lowerBB${j} ${j < rightIndexValue ? "&&" : ""
+            } `;
         }
         queryString += `${i < data.length - 1 ? "&& " : ""}`;
         break;
       case "Giá trị MFI(20)":
-        queryString += `0 + mfi > 0 + ${rightIndexValue[0]} && 0 + mfi < 0 + ${
-          rightIndexValue[1]
-        } ${i < data.length - 1 ? "&& " : ""}`;
+        queryString += `0 + mfi > 0 + ${rightIndexValue[0]} && 0 + mfi < 0 + ${rightIndexValue[1]
+          } ${i < data.length - 1 ? "&& " : ""}`;
         break;
       case "MFI(20) và vùng Quá mua/Quá bán":
-        queryString += `0 + mfi_yesterday ${compareString[0]} 0 + ${
-          rightIndexValue === 0 ? 70 : 30
-        } && 0 + mfi ${compareString[1]} 0 + ${
-          rightIndexValue === 0 ? 70 : 30
-        } ${i < data.length - 1 ? "&& " : ""}`;
+        queryString += `0 + mfi_yesterday ${compareString[0]} 0 + ${rightIndexValue === 0 ? 70 : 30
+          } && 0 + mfi ${compareString[1]} 0 + ${rightIndexValue === 0 ? 70 : 30
+          } ${i < data.length - 1 ? "&& " : ""}`;
         break;
       case "Stochastic và vùng Quá mua/Quá bán":
-        queryString += `0 + ${left}_yesterday ${compareString[0]} 0 + ${
-          rightIndexValue === 0 ? 70 : 30
-        } 
-        && 0 + ${left} ${compareString[1]} 0 + ${
-          rightIndexValue === 0 ? 70 : 30
-        } ${i < data.length - 1 ? "&& " : ""}`;
+        queryString += `0 + ${left}_yesterday ${compareString[0]} 0 + ${rightIndexValue === 0 ? 70 : 30
+          } 
+        && 0 + ${left} ${compareString[1]} 0 + ${rightIndexValue === 0 ? 70 : 30
+          } ${i < data.length - 1 ? "&& " : ""}`;
         break;
       case "Stochastic giao cắt nhau":
-        queryString += `0 + stochK_yesterday ${
-          compareString[0]
-        } 0 + stochD_yesterday && 0 + stochK ${compareString[1]} 0 + stochD ${
-          i < data.length - 1 ? "&& " : ""
-        }`;
+        queryString += `0 + stochK_yesterday ${compareString[0]
+          } 0 + stochD_yesterday && 0 + stochK ${compareString[1]} 0 + stochD ${i < data.length - 1 ? "&& " : ""
+          }`;
         break;
       case "Giá trị ADX(14)":
-        queryString += `0 + adx > 0 + ${rightIndexValue[0]} && 0 + adx < 0 + ${
-          rightIndexValue[1]
-        } ${i < data.length - 1 ? "&& " : ""}`;
+        queryString += `0 + adx > 0 + ${rightIndexValue[0]} && 0 + adx < 0 + ${rightIndexValue[1]
+          } ${i < data.length - 1 ? "&& " : ""}`;
         break;
       case "Giá trị -DI(14)":
-        queryString += `0 + mdi > 0 + ${rightIndexValue[0]} && 0 + mdi < 0 + ${
-          rightIndexValue[1]
-        } ${i < data.length - 1 ? "&& " : ""}`;
+        queryString += `0 + mdi > 0 + ${rightIndexValue[0]} && 0 + mdi < 0 + ${rightIndexValue[1]
+          } ${i < data.length - 1 ? "&& " : ""}`;
         break;
       case "Giá trị +DI(14)":
-        queryString += `0 + pdi > 0 + ${rightIndexValue[0]} && 0 + pdi < 0 + ${
-          rightIndexValue[1]
-        } ${i < data.length - 1 ? "&& " : ""}`;
+        queryString += `0 + pdi > 0 + ${rightIndexValue[0]} && 0 + pdi < 0 + ${rightIndexValue[1]
+          } ${i < data.length - 1 ? "&& " : ""}`;
         break;
       case "Giao cắt nhóm ADX":
-        queryString += `0 + ${left}_yesterday ${
-          compareString[0]
-        } 0 + ${right}_yesterday && 0 + ${left} ${
-          compareString[1]
-        } 0 + ${right} ${i < data.length - 1 ? "&& " : ""}`;
+        queryString += `0 + ${left}_yesterday ${compareString[0]
+          } 0 + ${right}_yesterday && 0 + ${left} ${compareString[1]
+          } 0 + ${right} ${i < data.length - 1 ? "&& " : ""}`;
         break;
       case "ADX và ngưỡng giá trị":
-        queryString += `0 + adx ${compareString} 0 + ${rightIndexValue} ${
-          i < data.length - 1 ? "&& " : ""
-        }`;
+        queryString += `0 + adx ${compareString} 0 + ${rightIndexValue} ${i < data.length - 1 ? "&& " : ""
+          }`;
         break;
       case "Giá so với PSar":
-        queryString += `0 + close ${compareString} 0 + psar ${
-          i < data.length - 1 ? "&& " : ""
-        }`;
+        queryString += `0 + close ${compareString} 0 + psar ${i < data.length - 1 ? "&& " : ""
+          }`;
         break;
       case "Khoảng cách giá và PSar":
-        queryString += `(0 + close) - (0 + psar)  > 0 + ${
-          rightIndexValue[0]
-        } && (0 + close) - (0 + psar) < 0 + ${rightIndexValue[1]} ${
-          i < data.length - 1 ? "&& " : ""
-        }`;
+        queryString += `(0 + close) - (0 + psar)  > 0 + ${rightIndexValue[0]
+          } && (0 + close) - (0 + psar) < 0 + ${rightIndexValue[1]} ${i < data.length - 1 ? "&& " : ""
+          }`;
         break;
       case "PSar đảo chiều":
-        queryString += `0 + close_yesterday ${
-          compareString[0]
-        } 0 + psar_yesterday && 0 + close ${compareString[1]} 0 + psar ${
-          i < data.length - 1 ? "&& " : ""
-        }`;
+        queryString += `0 + close_yesterday ${compareString[0]
+          } 0 + psar_yesterday && 0 + close ${compareString[1]} 0 + psar ${i < data.length - 1 ? "&& " : ""
+          }`;
         break;
       default:
         break;
